@@ -30,6 +30,8 @@ impl Store {
 
 pub struct State {
     clock: f32,
+    pub width: u32,
+    pub height: u32,
     camera: Camera,
     mouse: Mouse,
     show_scenery: bool,
@@ -57,6 +59,8 @@ impl State {
             clock: 0.,
             camera: Camera::new(),
             mouse: Mouse::default(),
+            width: 1,
+            height: 1,
             show_scenery: true,
             entities: vec![],
         }
@@ -65,7 +69,9 @@ impl State {
     pub fn camera(&self) -> &Camera {
         &self.camera
     }
-
+    pub fn camera_mut(&mut self) -> &mut Camera {
+        &mut self.camera
+    }
     /// The current time in milliseconds
     pub fn clock(&self) -> f32 {
         self.clock

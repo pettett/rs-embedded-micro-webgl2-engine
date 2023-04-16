@@ -84,6 +84,7 @@ impl WebRenderer {
                                     gl,
                                     &meshdata,
                                     &format!("{}{}{}", &ent.name, m.index(), p.index()),
+                                    state,
                                 );
                                 meshdata.render(gl, &b, camera, state);
                             }

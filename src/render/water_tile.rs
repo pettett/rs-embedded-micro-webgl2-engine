@@ -33,7 +33,7 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         &self.shader
     }
 
-    fn buffer_attributes(&self, gl: &WebGl2RenderingContext) -> BufferedMesh {
+    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
         let shader = self.shader();
 
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");

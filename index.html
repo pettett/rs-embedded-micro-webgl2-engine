@@ -4,6 +4,12 @@
 <head>
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 
+	<style>
+		.canvas {
+			width: 848px;
+			height: 480px;
+		}
+	</style>
 
 	<script src='/webgl_renderer.js'></script>
 
@@ -26,7 +32,7 @@
 	#{
 		type : "mesh",
 		position : [0,0,0],
-		mesh : "models/` + uri + `",
+		mesh : "assets/models/` + uri + `",
 		update : |ent|{
 			ent.rotation[1] += 0.01;
 		}

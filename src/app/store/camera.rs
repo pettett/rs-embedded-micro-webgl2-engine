@@ -10,7 +10,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new() -> Camera {
-        let fovy = PI / 3.0;
+        let fovy = 16.0 / 9.0;
 
         Camera {
             projection: Perspective3::new(fovy, 1.0, 0.1, 400.0),
@@ -18,6 +18,10 @@ impl Camera {
             up_down_radians: 80.0f32.to_radians(),
             orbit_radius: 15.,
         }
+    }
+
+    pub fn update_aspect(&mut self, aspect: f32) {
+        self.projection = Perspective3::new(aspect, 1.0, 0.1, 400.0);
     }
 
     pub fn view(&self) -> [f32; 16] {

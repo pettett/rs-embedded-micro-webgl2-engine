@@ -9,8 +9,8 @@ use web_sys::*;
 
 pub static APP_DIV_ID: &'static str = "webgl-water-tutorial";
 
-pub static CANVAS_WIDTH: i32 = 512;
-pub static CANVAS_HEIGHT: i32 = 512;
+//pub static CANVAS_WIDTH: i32 = 720;
+//pub static CANVAS_HEIGHT: i32 = 512;
 
 pub fn create_webgl_context(app: Rc<App>) -> Result<WebGl2RenderingContext, JsValue> {
     let canvas = init_canvas(app)?;
@@ -29,8 +29,10 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
 
     let canvas: HtmlCanvasElement = document.create_element("canvas").unwrap().dyn_into()?;
 
-    canvas.set_width(CANVAS_WIDTH as u32);
-    canvas.set_height(CANVAS_HEIGHT as u32);
+    //canvas.set_width(CANVAS_WIDTH as u32);
+    //canvas.set_height(CANVAS_HEIGHT as u32);
+
+    canvas.set_class_name("canvas");
 
     attach_mouse_down_handler(&canvas, Rc::clone(&app))?;
     attach_mouse_up_handler(&canvas, Rc::clone(&app))?;
@@ -51,6 +53,21 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
     };
 
     app_div.append_child(&canvas)?;
+
+    let dpr: f64 = window.device_pixel_ratio();
+    let displayWidth = (canvas.client_width() as f64 * dpr).round() as u32;
+    let displayHeight = (canvas.client_height() as f64 * dpr).round() as u32;
+
+    canvas.set_width(displayWidth);
+    canvas.set_height(displayHeight);
+
+    let mut store = app.store.borrow_mut();
+    store.state.width = displayWidth;
+    store.state.height = displayHeight;
+    store
+        .state
+        .camera_mut()
+        .update_aspect((displayWidth as f32) / (displayHeight as f32));
 
     Ok(canvas)
 }

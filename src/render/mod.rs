@@ -7,7 +7,7 @@ use self::water_tile::*;
 use crate::app::store::water::Water;
 use crate::app::Assets;
 use crate::app::State;
-use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
+//use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::render::rgl::shader::ShaderKind;
 use crate::render::rgl::shader::ShaderSystem;
 use crate::render::textured_quad::TexturedQuad;
@@ -145,7 +145,7 @@ impl WebRenderer {
 
             self.render_refraction_fbo(gl, w, &self.camera_buffer, state, assets);
             self.render_reflection_fbo(gl, w, &self.flipped_y_camera_buffer, state, assets);
-            gl.viewport(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            gl.viewport(0, 0, state.width as i32, state.height as i32);
             gl.bind_framebuffer(GL::FRAMEBUFFER, None);
         }
 
@@ -173,7 +173,7 @@ impl WebRenderer {
 
         let water_tile = RenderableWaterTile::new(water_shader, water);
 
-        let b = self.prepare_for_render(gl, &water_tile, "water");
+        let b = self.prepare_for_render(gl, &water_tile, "water", state);
         water_tile.render(gl, &b, camera, state);
     }
 
@@ -234,13 +234,13 @@ impl WebRenderer {
         self.shader_sys.use_program(gl, ShaderKind::TexturedQuad);
         let textured_quad = TexturedQuad::new(
             0,
-            CANVAS_HEIGHT as u16,
+            state.height as u16,
             75,
             75,
             TextureUnit::Refraction as u8,
             quad_shader,
         );
-        let b = self.prepare_for_render(gl, &textured_quad, "RefractionVisual");
+        let b = self.prepare_for_render(gl, &textured_quad, "RefractionVisual", state);
         textured_quad.render(gl, &b, camera, state);
     }
 
@@ -256,15 +256,15 @@ impl WebRenderer {
             .unwrap();
         self.shader_sys.use_program(gl, ShaderKind::TexturedQuad);
         let textured_quad = TexturedQuad::new(
-            CANVAS_WIDTH as u16 - 75,
-            CANVAS_HEIGHT as u16,
+            state.width as u16 - 75,
+            state.height as u16,
             75,
             75,
             TextureUnit::Reflection as u8,
             quad_shader,
         );
 
-        let b = self.prepare_for_render(gl, &textured_quad, "ReflectionVisual");
+        let b = self.prepare_for_render(gl, &textured_quad, "ReflectionVisual", state);
         textured_quad.render(gl, &b, camera, state);
     }
 
@@ -273,11 +273,12 @@ impl WebRenderer {
         gl: &WebGl2RenderingContext,
         renderable: &impl Render<'a>,
         key: &str,
+        state: &State,
     ) -> BufferedMesh {
         if self.vao_ext.vaos.borrow().get(key).is_none() {
             let vao = Vao::new(gl);
             vao.bind(gl);
-            let b = renderable.buffer_attributes(gl);
+            let b = renderable.buffer_attributes(gl, state);
             let mut vaos = self.vao_ext.vaos.borrow_mut();
 
             vaos.insert(key.to_string(), (vao, b));

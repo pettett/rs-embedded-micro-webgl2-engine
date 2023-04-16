@@ -32,7 +32,7 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
         &self.shader
     }
 
-    fn buffer_attributes(&self, gl: &WebGl2RenderingContext) -> BufferedMesh {
+    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
         let shader = self.shader();
         let mesh: &gltf::Primitive<'a> = self.mesh;
 

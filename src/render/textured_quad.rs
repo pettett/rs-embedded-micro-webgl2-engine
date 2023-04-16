@@ -1,5 +1,5 @@
 use crate::app::State;
-use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
+//use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::render::rgl::shader::Shader;
 use crate::render::rgl::shader::ShaderKind;
 use crate::render::Render;
@@ -53,10 +53,10 @@ impl<'a> Render<'a> for TexturedQuad<'a> {
         &self.shader
     }
 
-    fn buffer_attributes(&self, gl: &GL) -> BufferedMesh {
+    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
         let shader = self.shader();
 
-        let vertex_data = self.make_textured_quad_vertices(CANVAS_WIDTH, CANVAS_HEIGHT);
+        let vertex_data = self.make_textured_quad_vertices(state.width, state.height);
 
         let vertex_data_attrib = gl.get_attrib_location(&shader.program, "vertexData");
         gl.enable_vertex_attrib_array(vertex_data_attrib as u32);
@@ -86,7 +86,7 @@ impl<'a> Render<'a> for TexturedQuad<'a> {
 
 impl<'a> TexturedQuad<'a> {
     // Combine our vertex data so that we can pass one array to the GPU
-    fn make_textured_quad_vertices(&self, viewport_width: i32, viewport_height: i32) -> Vec<f32> {
+    fn make_textured_quad_vertices(&self, viewport_width: u32, viewport_height: u32) -> Vec<f32> {
         let viewport_width = viewport_width as f32;
         let viewport_height = viewport_height as f32;
 

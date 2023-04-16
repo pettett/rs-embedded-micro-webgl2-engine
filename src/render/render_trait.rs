@@ -18,7 +18,7 @@ pub trait Render<'a> {
 
     fn shader(&'a self) -> &'a Shader;
 
-    fn buffer_attributes(&self, gl: &GL) -> BufferedMesh;
+    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh;
 
     fn render(
         &self,
