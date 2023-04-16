@@ -1,15 +1,15 @@
 use crate::app::State;
 //use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
+use super::rgl::uniform_buffer::UniformBuffer;
+use super::{BufferedMesh, CameraData};
 use crate::render::rgl::shader::Shader;
 use crate::render::rgl::shader::ShaderKind;
 use crate::render::Render;
+use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
-use super::rgl::uniform_buffer::UniformBuffer;
-use super::{BufferedMesh, CameraData};
-
-pub struct TexturedQuad<'a> {
+pub struct TexturedQuad {
     /// Left most part of canvas is 0, rightmost is CANVAS_WIDTH
     left: u16,
     /// Bottom of canvas is 0, top is CANVAS_HEIGHT
@@ -21,17 +21,17 @@ pub struct TexturedQuad<'a> {
     /// The texture unit to use
     texture_unit: u8,
     /// The shader to use when rendering
-    shader: &'a Shader,
+    shader: Rc<Shader>,
 }
 
-impl<'a> TexturedQuad<'a> {
+impl TexturedQuad {
     pub fn new(
         left: u16,
         top: u16,
         width: u16,
         height: u16,
         texture_unit: u8,
-        shader: &Shader,
+        shader: Rc<Shader>,
     ) -> TexturedQuad {
         TexturedQuad {
             left,
@@ -44,13 +44,13 @@ impl<'a> TexturedQuad<'a> {
     }
 }
 
-impl<'a> Render<'a> for TexturedQuad<'a> {
+impl<'a> Render<'a> for TexturedQuad {
     fn shader_kind() -> ShaderKind {
         ShaderKind::TexturedQuad
     }
 
-    fn shader(&'a self) -> &'a Shader {
-        &self.shader
+    fn shader(&'a self) -> Rc<Shader> {
+        self.shader.clone()
     }
 
     fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
@@ -84,7 +84,7 @@ impl<'a> Render<'a> for TexturedQuad<'a> {
     }
 }
 
-impl<'a> TexturedQuad<'a> {
+impl TexturedQuad {
     // Combine our vertex data so that we can pass one array to the GPU
     fn make_textured_quad_vertices(&self, viewport_width: u32, viewport_height: u32) -> Vec<f32> {
         let viewport_width = viewport_width as f32;

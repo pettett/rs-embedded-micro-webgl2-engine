@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
-
 static TEXTURED_QUAD_VS: &'static str = include_str!("./textured-quad-vertex.glsl");
 static TEXTURED_QUAD_FS: &'static str = include_str!("./textured-quad-fragment.glsl");
 
@@ -17,7 +17,7 @@ static WATER_FS: &'static str = include_str!("./water-fragment.glsl");
 
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {
-    programs: HashMap<ShaderKind, Shader>,
+    programs: HashMap<ShaderKind, std::rc::Rc<Shader>>,
     active_program: RefCell<ShaderKind>,
 }
 
@@ -35,10 +35,10 @@ impl ShaderSystem {
         let active_program = RefCell::new(ShaderKind::TexturedQuad);
         gl.use_program(Some(&textured_quad_shader.program));
 
-        programs.insert(ShaderKind::Water, water_shader);
-        programs.insert(ShaderKind::NonSkinnedMesh, non_skinned_shader);
+        programs.insert(ShaderKind::Water, Rc::new(water_shader));
+        programs.insert(ShaderKind::NonSkinnedMesh, Rc::new(non_skinned_shader));
         //programs.insert(ShaderKind::SkinnedMesh, skinned_mesh_shader);
-        programs.insert(ShaderKind::TexturedQuad, textured_quad_shader);
+        programs.insert(ShaderKind::TexturedQuad, Rc::new(textured_quad_shader));
 
         ShaderSystem {
             programs,
@@ -47,7 +47,7 @@ impl ShaderSystem {
     }
 
     /// Get one of our Shader's
-    pub fn get_shader(&self, shader_kind: &ShaderKind) -> Option<&Shader> {
+    pub fn get_shader(&self, shader_kind: &ShaderKind) -> Option<&Rc<Shader>> {
         self.programs.get(shader_kind)
     }
 

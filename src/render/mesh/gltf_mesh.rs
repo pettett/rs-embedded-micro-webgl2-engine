@@ -1,3 +1,4 @@
+use super::MeshRenderOpts;
 use crate::app::State;
 use crate::render::rgl::shader::Shader;
 use crate::render::rgl::shader::ShaderKind;
@@ -11,15 +12,14 @@ use gltf::mesh::util::ReadTexCoords;
 use gltf::{buffer::Data, Primitive};
 use nalgebra;
 use nalgebra::{Isometry3, Vector3};
+use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
-
-use super::MeshRenderOpts;
 
 pub struct NonSkinnedGltfMesh<'a> {
     pub mesh: &'a Primitive<'a>,
     pub buffers: &'a Vec<Data>,
-    pub shader: &'a Shader,
+    pub shader: Rc<Shader>,
     pub opts: &'a MeshRenderOpts,
 }
 
@@ -28,8 +28,8 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
         ShaderKind::NonSkinnedMesh
     }
 
-    fn shader(&'a self) -> &'a Shader {
-        &self.shader
+    fn shader(&self) -> Rc<Shader> {
+        self.shader.clone()
     }
 
     fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
@@ -109,33 +109,16 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
         //let camera_pos_uni = shader.get_uniform_location(gl, "cameraPos");
         //let perspective_uni = shader.get_uniform_location(gl, "perspective");
         let clip_plane_uni = shader.get_uniform_location(gl, "clipPlane");
-        let mesh_texture_uni = shader.get_uniform_location(gl, "meshTexture");
 
         gl.uniform4fv_with_f32_array(clip_plane_uni.as_ref(), &mut opts.clip_plane.clone()[..]);
-
-        //let mut view = if opts.flip_camera_y {
-        //    state.camera().view_flipped_y()
-        //} else {
-        //    state.camera().view()
-        //};
-        //gl.uniform_matrix4fv_with_f32_array(view_uni.as_ref(), false, &mut view);
-
-        //let camera_pos = state.camera().get_eye_pos();
-        //let mut camera_pos = [camera_pos.x, camera_pos.y, camera_pos.z];
-        //gl.uniform3fv_with_f32_array(camera_pos_uni.as_ref(), &mut camera_pos);
-
-        //let mut perspective = state.camera().projection();
-        //gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
 
         let model = Isometry3::new(opts.pos, opts.rot);
         let mut model_array = [0.; 16];
         model_array.copy_from_slice(model.to_homogeneous().as_slice());
         gl.uniform_matrix4fv_with_f32_array(model_uni.as_ref(), false, &mut model_array);
 
-        gl.uniform1i(mesh_texture_uni.as_ref(), TextureUnit::Stone.texture_unit());
-
         let block_index = shader.get_uniform_block_index(gl, "Camera");
-        camera.bind_base(gl, shader, block_index, 2);
+        camera.bind_base(gl, &shader, block_index, 2);
 
         gl.draw_elements_with_i32(
             GL::TRIANGLES,

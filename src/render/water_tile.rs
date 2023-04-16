@@ -1,3 +1,6 @@
+use super::rgl::uniform_buffer::UniformBuffer;
+use super::BufferedMesh;
+use super::CameraData;
 use crate::app::store::water::Water;
 use crate::app::State;
 use crate::render::rgl::shader::Shader;
@@ -6,20 +9,17 @@ use crate::render::Render;
 use crate::render::TextureUnit;
 use nalgebra;
 use nalgebra::{Isometry3, Matrix4, Vector3};
+use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
-use super::rgl::uniform_buffer::UniformBuffer;
-use super::BufferedMesh;
-use super::CameraData;
-
 pub struct RenderableWaterTile<'a> {
-    shader: &'a Shader,
+    shader: Rc<Shader>,
     water: &'a Water,
 }
 
 impl<'a> RenderableWaterTile<'a> {
-    pub fn new(shader: &'a Shader, water: &'a Water) -> RenderableWaterTile<'a> {
+    pub fn new(shader: Rc<Shader>, water: &'a Water) -> RenderableWaterTile<'a> {
         RenderableWaterTile { shader, water }
     }
 }
@@ -29,8 +29,8 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         ShaderKind::Water
     }
 
-    fn shader(&'a self) -> &'a Shader {
-        &self.shader
+    fn shader(&'a self) -> Rc<Shader> {
+        self.shader.clone()
     }
 
     fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
@@ -131,7 +131,7 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         //gl.uniform_matrix4fv_with_f32_array(perspective_uni.as_ref(), false, &mut perspective);
 
         let block_index = shader.get_uniform_block_index(gl, "Camera");
-        camera.bind_base(gl, shader, block_index, 2);
+        camera.bind_base(gl, &shader, block_index, 2);
 
         gl.enable(GL::BLEND);
         gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA);

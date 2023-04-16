@@ -22,6 +22,7 @@ use web_sys::*;
 pub static WATER_TILE_Y_POS: f32 = 0.0;
 
 mod framebuffer;
+pub mod material;
 mod mesh;
 mod render_meshes;
 mod render_trait;
@@ -171,7 +172,7 @@ impl WebRenderer {
         let water_shader = self.shader_sys.get_shader(&ShaderKind::Water).unwrap();
         self.shader_sys.use_program(gl, ShaderKind::Water);
 
-        let water_tile = RenderableWaterTile::new(water_shader, water);
+        let water_tile = RenderableWaterTile::new(water_shader.clone(), water);
 
         let b = self.prepare_for_render(gl, &water_tile, "water", state);
         water_tile.render(gl, &b, camera, state);
@@ -238,7 +239,7 @@ impl WebRenderer {
             75,
             75,
             TextureUnit::Refraction as u8,
-            quad_shader,
+            quad_shader.clone(),
         );
         let b = self.prepare_for_render(gl, &textured_quad, "RefractionVisual", state);
         textured_quad.render(gl, &b, camera, state);
@@ -261,7 +262,7 @@ impl WebRenderer {
             75,
             75,
             TextureUnit::Reflection as u8,
-            quad_shader,
+            quad_shader.clone(),
         );
 
         let b = self.prepare_for_render(gl, &textured_quad, "ReflectionVisual", state);

@@ -16,7 +16,7 @@ pub struct BufferedMesh {
 pub trait Render<'a> {
     fn shader_kind() -> ShaderKind;
 
-    fn shader(&'a self) -> &'a Shader;
+    fn shader(&'a self) -> std::rc::Rc<Shader>;
 
     fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh;
 

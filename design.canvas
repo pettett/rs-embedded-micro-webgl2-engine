@@ -1,0 +1,27 @@
+{
+	"nodes":[
+		{"type":"text","text":"## Control\n- controls rhai execution\n- Defines assets in `onload`\n- Defines store in `control`","id":"4fdd18a222ad4fe8","x":200,"y":-113,"width":358,"height":197},
+		{"type":"text","text":"## Render\n\n- Render **store** using **assets** with RGL\n- Define traits for renderable assets","id":"b18be987373db543","x":-612,"y":-87,"width":250,"height":207},
+		{"type":"text","text":"## Store\nCurrent layout of engine entities\nPoints back to assets for definitions","id":"2f5e3603c363c819","x":-200,"y":-123,"width":250,"height":203},
+		{"type":"text","text":"## Assets\n- Stores assets related to rendering or execution\n- Handles upload of assets to GPU using RGL\n- Defines how assets are to be used in render","id":"1dc95985cecc901b","x":-200,"y":207,"width":250,"height":260},
+		{"type":"text","text":"## Main","id":"99559d2d44ff14f6","x":-200,"y":-320,"width":250,"height":60},
+		{"id":"b00c93c4a5c66044","x":-520,"y":713,"width":360,"height":127,"type":"text","text":"Material\n- Defines a UBO of params\n- wraps shaders (many to one)"},
+		{"type":"text","text":"# RGL\n- Simple wrapper around WebGL2","id":"733dc8bcbaaf3f29","x":-1080,"y":604,"width":312,"height":173},
+		{"id":"60c6e1a3986428e5","x":-520,"y":520,"width":360,"height":131,"type":"text","text":"Mesh/Rendable\n- Defines mesh information and holds mesh buffer\n- Wraps gl draw"}
+	],
+	"edges":[
+		{"id":"f92e0dbf5677c50a","fromNode":"99559d2d44ff14f6","fromSide":"bottom","toNode":"4fdd18a222ad4fe8","toSide":"top","label":"gives events"},
+		{"id":"1d8952178465efde","fromNode":"b18be987373db543","fromSide":"bottom","toNode":"733dc8bcbaaf3f29","toSide":"top"},
+		{"id":"d527706e12b46524","fromNode":"b18be987373db543","fromSide":"right","toNode":"1dc95985cecc901b","toSide":"left"},
+		{"id":"7f149369ef24ca33","fromNode":"b18be987373db543","fromSide":"right","toNode":"2f5e3603c363c819","toSide":"left"},
+		{"id":"daba769d71920934","fromNode":"4fdd18a222ad4fe8","fromSide":"left","toNode":"1dc95985cecc901b","toSide":"right"},
+		{"id":"6197fbdb80d764f9","fromNode":"4fdd18a222ad4fe8","fromSide":"left","toNode":"2f5e3603c363c819","toSide":"right"},
+		{"id":"a408de0a8116258c","fromNode":"99559d2d44ff14f6","fromSide":"bottom","toNode":"b18be987373db543","toSide":"top","label":"on refresh"},
+		{"id":"3669d1299da02e66","fromNode":"2f5e3603c363c819","fromSide":"bottom","toNode":"1dc95985cecc901b","toSide":"top"},
+		{"id":"49c95e716419052d","fromNode":"1dc95985cecc901b","fromSide":"left","toNode":"60c6e1a3986428e5","toSide":"top"},
+		{"id":"093354ac672445ef","fromNode":"b18be987373db543","fromSide":"bottom","toNode":"60c6e1a3986428e5","toSide":"top"},
+		{"id":"67566b7b7be29d14","fromNode":"60c6e1a3986428e5","fromSide":"left","toNode":"733dc8bcbaaf3f29","toSide":"right"},
+		{"id":"b914feea9b0917f1","fromNode":"b00c93c4a5c66044","fromSide":"left","toNode":"733dc8bcbaaf3f29","toSide":"right"},
+		{"id":"9a9c513ce2fd1e6d","fromNode":"1dc95985cecc901b","fromSide":"bottom","toNode":"b00c93c4a5c66044","toSide":"right"}
+	]
+}

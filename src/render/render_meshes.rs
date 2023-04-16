@@ -10,6 +10,8 @@ use nalgebra::ArrayStorage;
 use nalgebra::Vector3;
 use web_sys::WebGl2RenderingContext as GL;
 
+use super::material::albedo::Albedo;
+use super::material::Material;
 use super::rgl::uniform_buffer::UniformBuffer;
 use super::CameraData;
 use super::MeshRenderOpts;
@@ -35,14 +37,19 @@ impl WebRenderer {
 
         let (_, no_skin) = (ShaderKind::SkinnedMesh, ShaderKind::NonSkinnedMesh);
 
+        let non_skinned_shader = self.shader_sys.get_shader(&no_skin).unwrap();
+        self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
+
+        let mesh_mat = Albedo {
+            shader: non_skinned_shader.clone(),
+            tex: super::TextureUnit::Dudv,
+        };
+
         // Render Terrain
 
         for entity in &state.entities {
             if let crate::app::Entity::EntMesh(mesh) = &**entity {
                 let ent = mesh.borrow();
-
-                let non_skinned_shader = self.shader_sys.get_shader(&no_skin).unwrap();
-                self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
 
                 let mut mesh_opts = MeshRenderOpts {
                     pos: ent.position,
@@ -73,7 +80,7 @@ impl WebRenderer {
                                 let meshdata = NonSkinnedGltfMesh {
                                     mesh: &p,
                                     buffers: &doc.buffers,
-                                    shader: non_skinned_shader,
+                                    shader: non_skinned_shader.clone(),
                                     opts: &mesh_opts,
                                 };
 
@@ -86,6 +93,9 @@ impl WebRenderer {
                                     &format!("{}{}{}", &ent.name, m.index(), p.index()),
                                     state,
                                 );
+
+                                mesh_mat.bind_uniforms(gl, camera, state);
+
                                 meshdata.render(gl, &b, camera, state);
                             }
                         }
