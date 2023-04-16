@@ -1,0 +1,1 @@
+http -m wasm:application/wasm

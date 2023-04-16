@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+
+
+	<script src='/webgl_renderer.js'></script>
+
+	<script type="module">
+		import init, { WebClient } from './webgl_renderer.js';
+
+
+		async function displayMesh(uri) {
+			// just set the lua to display only the mesh
+
+			window.code.setValue(`let data= [
+	#{
+		type:"water",
+		reflectivity: 0.5,
+		fresnel_strength: 1.5,
+		wave_speed: 0.06,
+		use_reflection: true,
+		use_refraction: true,
+	},
+	#{
+		type : "mesh",
+		position : [0,0,0],
+		mesh : "assets/models/` + uri + `",
+		update : |ent|{
+			ent.rotation[1] += 0.01;
+		}
+	}, 
+]; 
+return data;`);
+
+			restart()
+		}
+
+
+		async function restart() {
+			document.getElementById('onloadout').innerText = await window.webClient.restart(window.code.getValue())
+		}
+
+
+		window.restart = restart;
+
+		window.displayMesh = displayMesh;
+
+		async function run() {
+
+
+
+
+			await init();
+
+			// Start our rust application. You can find `WebClient` in `src/lib.rs`
+			const webClient = new WebClient()
+			webClient.start()
+
+			window.webClient = webClient
+
+
+
+			let time = Date.now();
+			function render() {
+				const dt = Date.now() - time
+
+				webClient.update(dt)
+				webClient.render()
+				window.requestAnimationFrame(render)
+
+				time = Date.now()
+			}
+
+			render()
+		}
+
+		run(); 
+	</script>
+</head>
+
+<body>
+	<select name="meshes" id="meshes" onchange="window.displayMesh(value)">
+		<option value="Forklift.glb">Forklift</option>
+		<option value="Drill.glb">Drill</option>
+		<option value="Lantern.glb">Lantern</option>
+		<option value="knifing_goose.glb">Goose</option>
+		<option value="torus.glb">Torus</option>
+		<option value="cube.glb">Cube</option>
+	</select>
+
+
+	<div id="webgl-water-tutorial"> </div>
+
+
+	<textarea id="onload" rows="15" cols="63" style="outline: none;" autocorrect="off" autocapitalize="none" spellcheck="false" tabindex="0" wrap="off">
+	</textarea>
+	<button onclick="window.restart()">Restart</button>
+	<p id="onloadout"></p>
+
+	<!-- Create a simple CodeMirror instance -->
+	<script src="codemirror/lib/codemirror.js"></script>
+	<link rel="stylesheet" href="codemirror/lib/codemirror.css">
+	<script src="codemirror/addon/mode/simple.js"></script>
+	<script src="codemirror/mode/rhai/rhai.js"></script>
+	<script>
+		window.code = CodeMirror.fromTextArea(document.getElementById("onload"), {
+			lineNumbers: true,
+			mode: "rhai",
+		});
+	</script>
+
+</body>
+
+</html>
