@@ -21,13 +21,13 @@ impl Control {
     ) -> Result<(), String> {
         match msg {
             LuaMsg::Load(str) => {
-                web_sys::console::log_1(&"Compiling...".into());
+                log::info!("Compiling...");
                 match self.compile_on_load(str) {
                     Err(e) => return Err(format!("{:?}", e)),
                     Ok(()) => (),
                 };
 
-                web_sys::console::log_1(&"Compiled, Running...".into());
+                log::info!("Compiled, Running...");
                 let data = self.run_on_load().map_err(|e| e.to_string())?;
 
                 self.load(state, assets, data)
@@ -39,7 +39,7 @@ impl Control {
 
     pub fn new() -> Self {
         let mut engine = Engine::new();
-        engine.on_print(|x| web_sys::console::log_1(&x.into()));
+        engine.on_print(|x| log::info!("{}", x));
 
         pub type RefMesh = Rc<RefCell<Mesh>>;
 
@@ -93,19 +93,19 @@ impl Control {
     }
 
     pub fn run_on_load(&mut self) -> Result<Vec<Dynamic>, Box<rhai::EvalAltResult>> {
-        web_sys::console::log_1(&"Running On Load".into());
+        log::info!("Running On Load");
 
         self.engine
             .eval_ast_with_scope(&mut self.scope, &self.on_load)
     }
 
-    pub fn run_func(&mut self, func: &str, entity: Rc<RefCell<Mesh>>) {
+    pub fn run_func(&mut self, func: &str, entity: Rc<RefCell<Mesh>>) -> Dynamic {
         // ensure entity is borrowable, before we fail within the function
         entity.borrow_mut();
 
         self.engine
-            .call_fn::<Dynamic>(&mut self.scope, &self.on_load, func, (entity,))
-            .unwrap();
+            .call_fn(&mut self.scope, &self.on_load, func, (entity,))
+            .unwrap()
     }
 
     pub fn bool_or(e: &rhai::Map, s: &str, or: bool) -> bool {
@@ -187,7 +187,7 @@ impl Control {
                         .get("update")
                         .map(|f| f.clone().cast::<rhai::FnPtr>().fn_name().to_owned());
 
-                    web_sys::console::log_1(&format!("Position: {:?}", pos).into());
+                    log::info!("Position: {:?}", pos);
 
                     super::Entity::EntMesh(Rc::new(RefCell::new(super::Mesh {
                         name: mesh,
@@ -205,12 +205,12 @@ impl Control {
                 }),
                 _ => return Err("Unknown Entity Type"),
             };
-            web_sys::console::log_1(&format!("{:?}", e).into());
+            log::info!("{:?}", e);
 
             state.borrow_mut().state.entities.push(Box::new(e))
         }
 
-        web_sys::console::log_1(&format!("{:?}", state.borrow_mut().state.entities).into());
+        log::info!("{:?}", state.borrow_mut().state.entities);
 
         Ok(())
     }

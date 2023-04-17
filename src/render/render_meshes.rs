@@ -41,8 +41,8 @@ impl WebRenderer {
 
         let mesh_mat = MatAlbedo {
             shader: non_skinned_shader.clone(),
-            tex: assets.get_tex("assets/textures/stone-texture.png"),
-            //tex: assets.get_tex("random_texture.png"),
+            //    tex: assets.get_tex("assets/textures/stone-texture.png"),
+            tex: assets.get_tex("random_texture.png"),
         };
 
         self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);

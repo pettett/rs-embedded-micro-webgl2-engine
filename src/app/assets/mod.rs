@@ -79,7 +79,7 @@ impl Assets {
             return t.clone();
         } else {
             // Return the error texture
-            console::warn_1(&format!("{} is not a loaded texture", tex_name).into());
+            log::warn!("{} is not a loaded texture", tex_name);
             return self.error_tex.clone().expect("Error texture not loaded!");
         }
     }

@@ -45,6 +45,7 @@ impl WebClient {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WebClient {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        wasm_logger::init(wasm_logger::Config::default());
 
         let app = Rc::new(App::new());
 
@@ -94,7 +95,7 @@ impl WebClient {
                         let f = { m.borrow().update.as_ref().map(|f| f.clone()) };
 
                         if let Some(f) = f {
-                            c.run_func(&f, m.clone())
+                            c.run_func(&f, m.clone());
                         }
                     }
                 }
