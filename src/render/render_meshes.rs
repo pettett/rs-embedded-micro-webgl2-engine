@@ -39,21 +39,20 @@ impl WebRenderer {
 
         let non_skinned_shader = self.shader_sys.get_shader(&no_skin).unwrap();
 
-        let mesh_mat = MatAlbedo {
-            shader: non_skinned_shader.clone(),
-            //    tex: assets.get_tex("assets/textures/stone-texture.png"),
-            tex: assets.get_tex("random_texture.png"),
-        };
-
         self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
-
-        mesh_mat.bind_uniforms(gl, camera, state);
 
         // Render Terrain
 
         for entity in &state.entities {
             if let crate::app::Entity::EntMesh(mesh) = &**entity {
                 let ent = mesh.borrow();
+
+                let mesh_mat = MatAlbedo {
+                    shader: non_skinned_shader.clone(),
+                    tex: assets.get_tex(&ent.tex),
+                };
+
+                mesh_mat.bind_uniforms(gl, camera, state);
 
                 let mut mesh_opts = MeshRenderOpts {
                     pos: ent.position,

@@ -1,10 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use nalgebra::{ArrayStorage, Vector3};
 use rhai::{Dynamic, Engine, ParseError, Scope, AST};
 
 use crate::fetch;
-
+mod mesh_from_rhai;
 use super::{store::Mesh, Assets, LuaMsg, Store};
 pub struct Control {
     engine: Engine,
@@ -12,8 +11,40 @@ pub struct Control {
     on_load: AST,
 }
 
+pub fn bool_or(e: &rhai::Map, s: &str, or: bool) -> bool {
+    match e.get(s) {
+        Some(v) => v.as_bool().unwrap(),
+        None => or,
+    }
+}
+pub fn f32_or(e: &rhai::Map, s: &str, or: f32) -> f32 {
+    match e.get(s) {
+        Some(v) => to_f32(v).unwrap(),
+        None => or,
+    }
+}
+
+pub fn to_f32(d: &Dynamic) -> Result<f32, &'static str> {
+    match d.as_float() {
+        Ok(f) => Ok(f as f32),
+        Err(e) => match d.as_int() {
+            Ok(i) => Ok(i as f32),
+            Err(e) => Err("Non-numeric integer type found"),
+        },
+    }
+}
+
+pub fn to_vec3(d: &Dynamic) -> Result<[f32; 3], &'static str> {
+    let x = d.clone().into_array()?;
+
+    match x.len() {
+        3 => Ok([to_f32(&x[0])?, to_f32(&x[1])?, to_f32(&x[2])?]),
+        _ => Err("Incorrect length of vector"),
+    }
+}
+
 impl Control {
-    pub async fn lua_msg(
+    pub fn lua_msg(
         &mut self,
         msg: &LuaMsg,
         state: Rc<RefCell<Store>>,
@@ -30,9 +61,7 @@ impl Control {
                 log::info!("Compiled, Running...");
                 let data = self.run_on_load().map_err(|e| e.to_string())?;
 
-                self.load(state, assets, data)
-                    .await
-                    .map_err(|e| e.to_string())
+                self.load(state, assets, data).map_err(|e| e.to_string())
             }
         }
     }
@@ -108,43 +137,7 @@ impl Control {
             .unwrap()
     }
 
-    pub fn bool_or(e: &rhai::Map, s: &str, or: bool) -> bool {
-        match e.get(s) {
-            Some(v) => v.as_bool().unwrap(),
-            None => or,
-        }
-    }
-    pub fn f32_or(e: &rhai::Map, s: &str, or: f32) -> f32 {
-        match e.get(s) {
-            Some(v) => Self::to_f32(v).unwrap(),
-            None => or,
-        }
-    }
-
-    pub fn to_f32(d: &Dynamic) -> Result<f32, &'static str> {
-        match d.as_float() {
-            Ok(f) => Ok(f as f32),
-            Err(e) => match d.as_int() {
-                Ok(i) => Ok(i as f32),
-                Err(e) => Err("Non-numeric integer type found"),
-            },
-        }
-    }
-
-    pub fn to_vec3(d: &Dynamic) -> Result<[f32; 3], &'static str> {
-        let x = d.clone().into_array()?;
-
-        match x.len() {
-            3 => Ok([
-                Self::to_f32(&x[0])?,
-                Self::to_f32(&x[1])?,
-                Self::to_f32(&x[2])?,
-            ]),
-            _ => Err("Incorrect length of vector"),
-        }
-    }
-
-    pub async fn load(
+    pub fn load(
         &mut self,
         state: Rc<RefCell<Store>>,
         assets: Rc<RefCell<Assets>>,
@@ -158,59 +151,30 @@ impl Control {
 
         state.borrow_mut().state.entities.clear();
 
-        for dyn_entity in &data {
-            let entity = dyn_entity.clone_cast::<rhai::Map>();
+        for dyn_entity in data {
+            let entity = dyn_entity.cast::<rhai::Map>();
 
             let e = match entity["type"].clone().into_string()?.as_str() {
                 "mesh" => {
-                    let mesh = entity["mesh"].clone().into_string().unwrap().to_owned();
+                    let m = super::Mesh::try_from(entity).unwrap();
 
-                    // Load the mesh if it doesnt exist already
-                    if assets.borrow_mut().get_gltf(&mesh).is_none() {
-                        let data = fetch::fetch(&mesh).await.unwrap();
-
-                        assets
-                            .borrow_mut()
-                            .load_gltf(mesh.clone(), &data[..])
-                            .unwrap();
-                    }
-
-                    let pos = match entity.get("position") {
-                        Some(d) => Self::to_vec3(d)?,
-                        None => default_pos.clone(),
-                    };
-                    let rot = match entity.get("rotation") {
-                        Some(d) => Self::to_vec3(d)?,
-                        None => default_pos.clone(),
-                    };
-                    let update = entity
-                        .get("update")
-                        .map(|f| f.clone().cast::<rhai::FnPtr>().fn_name().to_owned());
-
-                    log::info!("Position: {:?}", pos);
-
-                    super::Entity::EntMesh(Rc::new(RefCell::new(super::Mesh {
-                        name: mesh,
-                        position: Vector3::from_array_storage(ArrayStorage([pos])),
-                        rotation: Vector3::from_array_storage(ArrayStorage([rot])),
-                        update,
-                    })))
+                    super::Entity::EntMesh(Rc::new(RefCell::new(m)))
                 }
                 "water" => super::Entity::EntWater(crate::app::store::water::Water {
-                    reflectivity: Self::f32_or(&entity, "reflectivity", 0.5),
-                    fresnel_strength: Self::f32_or(&entity, "fresnel", 0.5),
-                    wave_speed: Self::f32_or(&entity, "wave_speed", 0.5),
-                    use_refraction: Self::bool_or(&entity, "use_refraction", true),
-                    use_reflection: Self::bool_or(&entity, "use_reflection", true),
+                    reflectivity: f32_or(&entity, "reflectivity", 0.5),
+                    fresnel_strength: f32_or(&entity, "fresnel", 0.5),
+                    wave_speed: f32_or(&entity, "wave_speed", 0.5),
+                    use_refraction: bool_or(&entity, "use_refraction", true),
+                    use_reflection: bool_or(&entity, "use_reflection", true),
                 }),
                 _ => return Err("Unknown Entity Type"),
             };
-            log::info!("{:?}", e);
+            //log::info!("{:?}", e);
 
             state.borrow_mut().state.entities.push(Box::new(e))
         }
 
-        log::info!("{:?}", state.borrow_mut().state.entities);
+        //log::info!("{:?}", state.borrow_mut().state.entities);
 
         Ok(())
     }

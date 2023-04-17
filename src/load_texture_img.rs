@@ -5,14 +5,9 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlImageElement;
-use web_sys::WebGl2RenderingContext;
 use web_sys::WebGl2RenderingContext as GL;
 
-pub fn load_texture_image(
-    gl: Rc<WebGl2RenderingContext>,
-    assets: Rc<RefCell<Assets>>,
-    src: String,
-) {
+pub fn load_texture_image(gl: Rc<GL>, assets: Rc<RefCell<Assets>>, src: String) {
     let image = Rc::new(RefCell::new(HtmlImageElement::new().unwrap()));
     let image_clone = Rc::clone(&image);
 

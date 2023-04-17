@@ -15,14 +15,14 @@ pub async fn fetch(uri: &str) -> Result<Vec<u8>, JsValue> {
 
     let window = web_sys::window().unwrap();
 
-    log::info!("Fetching...");
+    log::info!("Fetching {}...", uri);
 
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
 
     // `resp_value` is a `Response` object.
     assert!(resp_value.is_instance_of::<Response>());
     let resp: Response = resp_value.dyn_into().unwrap();
-    log::info!("Unpacking...");
+    log::info!("Unpacking response from {}...", uri);
 
     // Convert this other `Promise` into a rust `Future`.
 

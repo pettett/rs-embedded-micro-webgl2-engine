@@ -33,6 +33,7 @@
 		type : "mesh",
 		position : [0,0,0],
 		mesh : "assets/models/` + uri + `",
+		texture : "assets/textures/stone-texture.png",
 		update : |ent|{
 			ent.rotation[1] += 0.01;
 		}
@@ -70,13 +71,13 @@ return data;`
 
 			let time = Date.now();
 			function render() {
-				const dt = Date.now() - time
+				const dt = Date.now() - time;
 
-				webClient.update(dt)
-				webClient.render()
-				window.requestAnimationFrame(render)
+				webClient.update(dt);
+				webClient.render();
+				window.requestAnimationFrame(render);
 
-				time = Date.now()
+				time = Date.now();
 			}
 
 			render()

@@ -46,6 +46,7 @@ pub enum Entity {
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub name: String,
+    pub tex: String,
     pub position: Vector3<f32>,
     pub rotation: Vector3<f32>,
     pub update: Option<String>,

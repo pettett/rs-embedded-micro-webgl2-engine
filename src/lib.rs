@@ -64,22 +64,6 @@ impl WebClient {
     pub fn start(&self) -> Result<(), JsValue> {
         let gl = &self.gl;
 
-        load_texture_image(
-            Rc::clone(gl),
-            self.app.assets.clone(),
-            "assets/textures/dudvmap.png".to_owned(),
-        );
-        load_texture_image(
-            Rc::clone(gl),
-            self.app.assets.clone(),
-            "assets/textures/normalmap.png".to_owned(),
-        );
-        load_texture_image(
-            Rc::clone(gl),
-            self.app.assets.clone(),
-            "assets/textures/stone-texture.png".to_owned(),
-        );
-
         Ok(())
     }
 
@@ -106,20 +90,28 @@ impl WebClient {
 
     /// Update our simulation
     pub async fn restart(&self, onload: String) -> String {
-        match self.app.control.try_borrow_mut() {
-            Ok(mut c) => match c
-                .lua_msg(
-                    &LuaMsg::Load(onload),
-                    self.app.store.clone(),
-                    self.app.assets.clone(),
-                )
-                .await
-            {
+        let s = match self.app.control.try_borrow_mut() {
+            Ok(mut c) => match c.lua_msg(
+                &LuaMsg::Load(onload),
+                self.app.store.clone(),
+                self.app.assets.clone(),
+            ) {
                 Ok(()) => "".to_owned(),
                 Err(str) => str,
             },
             Err(e) => e.to_string(),
-        }
+        };
+
+        //load requirements - meshes, textures, etc
+
+        self.app
+            .assets
+            .borrow_mut()
+            .mark_requirements(&self.app.store.borrow());
+
+        Assets::load_requirements(self.app.assets.clone(), self.gl.clone()).await;
+
+        s
     }
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame
