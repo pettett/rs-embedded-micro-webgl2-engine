@@ -3,21 +3,31 @@ use gltf::{
     Document, Error,
 };
 use std::collections::HashMap;
+use web_sys::{console, WebGl2RenderingContext};
+
+use crate::render::rgl::texture::Tex;
 pub struct GltfMesh {
     pub doc: Document,
     pub buffers: Vec<Data>,
 }
 
-#[derive(Default)]
 pub struct Assets {
     gltf: HashMap<String, GltfMesh>,
+    textures: HashMap<String, std::rc::Rc<Tex>>,
+    error_tex: Option<std::rc::Rc<Tex>>,
 }
 
 impl Assets {
     pub fn new() -> Assets {
         Assets {
             gltf: HashMap::new(),
+            textures: HashMap::new(),
+            error_tex: None,
         }
+    }
+
+    pub fn load(&mut self, gl: &WebGl2RenderingContext) {
+        self.error_tex = Some(std::rc::Rc::new(Tex::new_error(gl)));
     }
 
     /// Import the buffer data referenced by a glTF document.
@@ -58,6 +68,20 @@ impl Assets {
             },
         );
         Ok(())
+    }
+
+    pub fn register_tex(&mut self, tex_name: String, tex: Tex) {
+        self.textures.insert(tex_name, std::rc::Rc::new(tex));
+    }
+
+    pub fn get_tex(&self, tex_name: &str) -> std::rc::Rc<Tex> {
+        if let Some(t) = self.textures.get(tex_name) {
+            return t.clone();
+        } else {
+            // Return the error texture
+            console::warn_1(&format!("{} is not a loaded texture", tex_name).into());
+            return self.error_tex.clone().expect("Error texture not loaded!");
+        }
     }
 
     pub fn get_gltf(&self, gltf_name: &str) -> Option<&GltfMesh> {

@@ -16,13 +16,14 @@ use wasm_bindgen::JsValue;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
-use super::rgl::renderbuffer::Renderbuffer;
-use super::rgl::texture::TexFilter;
-use super::rgl::texture::Texture;
+use super::renderbuffer::Renderbuffer;
+use super::texture::Tex;
+use super::texture::TexFilter;
+use super::texture::TexUnit;
 
 pub struct Framebuffer {
     pub framebuffer: Option<WebGlFramebuffer>,
-    pub textures: HashMap<u32, Texture>,
+    pub textures: HashMap<u32, Tex>,
 }
 
 pub struct FramebufferBind<'a> {
@@ -46,6 +47,10 @@ impl Framebuffer {
         }
     }
 
+    pub fn bind_to_unit(&self, gl: &WebGl2RenderingContext, tex: u32, unit: &TexUnit) {
+        self.textures[&tex].bind_at(gl, unit);
+    }
+
     pub fn bind<'a>(&'a mut self, gl: &'a WebGl2RenderingContext) -> FramebufferBind<'a> {
         gl.bind_framebuffer(GL::FRAMEBUFFER, self.framebuffer.as_ref());
         FramebufferBind { fb: self, gl }
@@ -53,12 +58,12 @@ impl Framebuffer {
 }
 
 impl<'a> FramebufferBind<'a> {
-    pub fn texture_2d(&mut self, tex: Texture, attachment: u32) {
+    pub fn texture_2d(&mut self, tex: Tex, attachment: u32) {
         self.gl.framebuffer_texture_2d(
             GL::FRAMEBUFFER,
             attachment,
             GL::TEXTURE_2D,
-            tex.tex.as_ref(),
+            tex.texture(),
             0,
         );
 
@@ -87,7 +92,7 @@ impl WebRenderer {
 
             gl.active_texture(TextureUnit::Refraction.TEXTURE_N());
 
-            let color_texture = Texture::new_color(
+            let color_texture = Tex::new_color(
                 gl,
                 REFRACTION_TEXTURE_WIDTH,
                 REFRACTION_TEXTURE_HEIGHT,
@@ -97,7 +102,7 @@ impl WebRenderer {
             gl.active_texture(TextureUnit::RefractionDepth.TEXTURE_N());
 
             let depth_texture =
-                Texture::new_depth(gl, REFRACTION_TEXTURE_WIDTH, REFRACTION_TEXTURE_HEIGHT)?;
+                Tex::new_depth(gl, REFRACTION_TEXTURE_WIDTH, REFRACTION_TEXTURE_HEIGHT)?;
 
             fb.texture_2d(color_texture, GL::COLOR_ATTACHMENT0);
             fb.texture_2d(depth_texture, GL::DEPTH_ATTACHMENT);
@@ -117,7 +122,7 @@ impl WebRenderer {
 
             gl.active_texture(TextureUnit::Reflection.TEXTURE_N());
 
-            let color_texture = Texture::new_color(
+            let color_texture = Tex::new_color(
                 gl,
                 REFLECTION_TEXTURE_WIDTH,
                 REFLECTION_TEXTURE_HEIGHT,

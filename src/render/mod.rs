@@ -1,7 +1,9 @@
-use self::framebuffer::*;
 pub(self) use self::mesh::*;
 pub(self) use self::render_trait::*;
+use self::rgl::framebuffer::*;
+use self::rgl::texture::TexUnit;
 use self::rgl::uniform_buffer::UniformBuffer;
+use self::rgl::Framebuffer;
 pub use self::texture_unit::*;
 use self::water_tile::*;
 use crate::app::store::water::Water;
@@ -21,12 +23,11 @@ use web_sys::*;
 
 pub static WATER_TILE_Y_POS: f32 = 0.0;
 
-mod framebuffer;
 pub mod material;
 mod mesh;
 mod render_meshes;
 mod render_trait;
-mod rgl;
+pub mod rgl;
 mod texture_unit;
 mod textured_quad;
 mod water_tile;
@@ -134,6 +135,33 @@ impl WebRenderer {
         let clip_plane = [0., 1., 0., above];
 
         if let Some(w) = &water {
+            //TODO: Assigning textures should be done in the water material
+            assets.get_tex("assets/textures/dudvmap.png").bind_at(
+                gl,
+                &TexUnit::new(gl, TextureUnit::Dudv.texture_unit() as u32),
+            );
+
+            assets.get_tex("assets/textures/normalmap.png").bind_at(
+                gl,
+                &TexUnit::new(gl, TextureUnit::NormalMap.texture_unit() as u32),
+            );
+
+            self.refraction_framebuffer.bind_to_unit(
+                gl,
+                GL::COLOR_ATTACHMENT0,
+                &TexUnit::new(gl, TextureUnit::Refraction.texture_unit() as u32),
+            );
+            self.refraction_framebuffer.bind_to_unit(
+                gl,
+                GL::DEPTH_ATTACHMENT,
+                &TexUnit::new(gl, TextureUnit::RefractionDepth.texture_unit() as u32),
+            );
+            self.reflection_framebuffer.bind_to_unit(
+                gl,
+                GL::COLOR_ATTACHMENT0,
+                &TexUnit::new(gl, TextureUnit::Reflection.texture_unit() as u32),
+            );
+
             if w.use_reflection {
                 let flipped_y_camera = CameraData {
                     view: state.camera().view_flipped_y_mat(),

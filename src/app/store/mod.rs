@@ -1,6 +1,5 @@
 mod mouse;
 
-use nalgebra::Point3;
 use nalgebra::Vector3;
 
 use self::mouse::*;

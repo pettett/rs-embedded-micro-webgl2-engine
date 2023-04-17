@@ -10,7 +10,7 @@ use nalgebra::ArrayStorage;
 use nalgebra::Vector3;
 use web_sys::WebGl2RenderingContext as GL;
 
-use super::material::albedo::Albedo;
+use super::material::MatAlbedo;
 use super::material::Material;
 use super::rgl::uniform_buffer::UniformBuffer;
 use super::CameraData;
@@ -38,12 +38,16 @@ impl WebRenderer {
         let (_, no_skin) = (ShaderKind::SkinnedMesh, ShaderKind::NonSkinnedMesh);
 
         let non_skinned_shader = self.shader_sys.get_shader(&no_skin).unwrap();
+
+        let mesh_mat = MatAlbedo {
+            shader: non_skinned_shader.clone(),
+            tex: assets.get_tex("assets/textures/stone-texture.png"),
+            //tex: assets.get_tex("random_texture.png"),
+        };
+
         self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
 
-        let mesh_mat = Albedo {
-            shader: non_skinned_shader.clone(),
-            tex: super::TextureUnit::Dudv,
-        };
+        mesh_mat.bind_uniforms(gl, camera, state);
 
         // Render Terrain
 
@@ -93,8 +97,6 @@ impl WebRenderer {
                                     &format!("{}{}{}", &ent.name, m.index(), p.index()),
                                     state,
                                 );
-
-                                mesh_mat.bind_uniforms(gl, camera, state);
 
                                 meshdata.render(gl, &b, camera, state);
                             }

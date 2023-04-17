@@ -55,19 +55,19 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
     app_div.append_child(&canvas)?;
 
     let dpr: f64 = window.device_pixel_ratio();
-    let displayWidth = (canvas.client_width() as f64 * dpr).round() as u32;
-    let displayHeight = (canvas.client_height() as f64 * dpr).round() as u32;
+    let display_width = (canvas.client_width() as f64 * dpr).round() as u32;
+    let display_height = (canvas.client_height() as f64 * dpr).round() as u32;
 
-    canvas.set_width(displayWidth);
-    canvas.set_height(displayHeight);
+    canvas.set_width(display_width);
+    canvas.set_height(display_height);
 
     let mut store = app.store.borrow_mut();
-    store.state.width = displayWidth;
-    store.state.height = displayHeight;
+    store.state.width = display_width;
+    store.state.height = display_height;
     store
         .state
         .camera_mut()
-        .update_aspect((displayWidth as f32) / (displayHeight as f32));
+        .update_aspect((display_width as f32) / (display_height as f32));
 
     Ok(canvas)
 }

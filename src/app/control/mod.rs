@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use nalgebra::{ArrayStorage, Dyn, Vector3};
+use nalgebra::{ArrayStorage, Vector3};
 use rhai::{Dynamic, Engine, ParseError, Scope, AST};
 
 use crate::fetch;

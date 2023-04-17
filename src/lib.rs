@@ -52,6 +52,9 @@ impl WebClient {
 
         let renderer = WebRenderer::new(&gl);
 
+        //Load default assets, mainly error texture and possibly primitives
+        app.assets.borrow_mut().load(&gl);
+
         WebClient { app, gl, renderer }
     }
 
@@ -60,9 +63,21 @@ impl WebClient {
     pub fn start(&self) -> Result<(), JsValue> {
         let gl = &self.gl;
 
-        load_texture_image(Rc::clone(gl), "assets/textures/dudvmap.png", TextureUnit::Dudv);
-        load_texture_image(Rc::clone(gl), "assets/textures//normalmap.png", TextureUnit::NormalMap);
-        load_texture_image(Rc::clone(gl), "assets/textures//stone-texture.png", TextureUnit::Stone);
+        load_texture_image(
+            Rc::clone(gl),
+            self.app.assets.clone(),
+            "assets/textures/dudvmap.png".to_owned(),
+        );
+        load_texture_image(
+            Rc::clone(gl),
+            self.app.assets.clone(),
+            "assets/textures/normalmap.png".to_owned(),
+        );
+        load_texture_image(
+            Rc::clone(gl),
+            self.app.assets.clone(),
+            "assets/textures/stone-texture.png".to_owned(),
+        );
 
         Ok(())
     }

@@ -37,15 +37,7 @@ impl<T: Sized> UniformBuffer<T> {
     pub fn buffer(&self, gl: &GL, data: &T) {
         let d = unsafe { Self::data_as_u8_slice(data) };
 
-        let memory_buffer = wasm_bindgen::memory()
-            .dyn_into::<WebAssembly::Memory>()
-            .unwrap()
-            .buffer();
-
-        let data_location = d.as_ptr() as u32;
-
-        let data_array = js_sys::Uint8Array::new(&memory_buffer)
-            .subarray(data_location, data_location + d.len() as u32);
+        let data_array = super::to_array_buffer_view(d);
 
         gl.bind_buffer(GL::UNIFORM_BUFFER, self.buffer.as_ref());
         //buffer memory
