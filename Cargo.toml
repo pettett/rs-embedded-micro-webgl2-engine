@@ -54,7 +54,8 @@ features = [
   'WebGlUniformLocation',
   'WebGlVertexArrayObject',
   'WheelEvent',
-  'Window', 
+  'Window',  
+  'console'
 ]
 
 [profile.release]

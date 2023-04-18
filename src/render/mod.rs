@@ -1,3 +1,5 @@
+use self::material::MatWater;
+use self::material::Material;
 pub(self) use self::mesh::*;
 pub(self) use self::render_trait::*;
 use self::rgl::framebuffer::*;
@@ -29,8 +31,6 @@ mod render_meshes;
 mod render_trait;
 pub mod rgl;
 mod texture_unit;
-mod textured_quad;
-mod water_tile;
 
 struct VaoExtension {
     vaos: RefCell<HashMap<String, (Vao, BufferedMesh)>>,
@@ -75,8 +75,8 @@ pub struct WebRenderer {
     shader_sys: ShaderSystem,
     #[allow(unused)]
     depth_texture_ext: Option<js_sys::Object>,
-    refraction_framebuffer: Framebuffer,
-    reflection_framebuffer: Framebuffer,
+    refraction_framebuffer: std::rc::Rc<Framebuffer>,
+    reflection_framebuffer: std::rc::Rc<Framebuffer>,
     vao_ext: VaoExtension,
     camera_buffer: UniformBuffer<CameraData>,
     flipped_y_camera_buffer: UniformBuffer<CameraData>,
@@ -94,8 +94,10 @@ impl WebRenderer {
             vaos: RefCell::new(HashMap::new()),
         };
 
-        let refraction_framebuffer = WebRenderer::create_refraction_framebuffer(&gl).unwrap();
-        let reflection_framebuffer = WebRenderer::create_reflection_framebuffer(&gl).unwrap();
+        let refraction_framebuffer =
+            std::rc::Rc::new(WebRenderer::create_refraction_framebuffer(&gl).unwrap());
+        let reflection_framebuffer =
+            std::rc::Rc::new(WebRenderer::create_reflection_framebuffer(&gl).unwrap());
 
         WebRenderer {
             depth_texture_ext,
@@ -135,33 +137,6 @@ impl WebRenderer {
         let clip_plane = [0., 1., 0., above];
 
         if let Some(w) = &water {
-            //TODO: Assigning textures should be done in the water material
-            assets.get_tex("assets/textures/dudvmap.png").bind_at(
-                gl,
-                &TexUnit::new(gl, TextureUnit::Dudv.texture_unit() as u32),
-            );
-
-            assets.get_tex("assets/textures/normalmap.png").bind_at(
-                gl,
-                &TexUnit::new(gl, TextureUnit::NormalMap.texture_unit() as u32),
-            );
-
-            self.refraction_framebuffer.bind_to_unit(
-                gl,
-                GL::COLOR_ATTACHMENT0,
-                &TexUnit::new(gl, TextureUnit::Refraction.texture_unit() as u32),
-            );
-            self.refraction_framebuffer.bind_to_unit(
-                gl,
-                GL::DEPTH_ATTACHMENT,
-                &TexUnit::new(gl, TextureUnit::RefractionDepth.texture_unit() as u32),
-            );
-            self.reflection_framebuffer.bind_to_unit(
-                gl,
-                GL::COLOR_ATTACHMENT0,
-                &TexUnit::new(gl, TextureUnit::Reflection.texture_unit() as u32),
-            );
-
             if w.use_reflection {
                 let flipped_y_camera = CameraData {
                     view: state.camera().view_flipped_y_mat(),
@@ -179,7 +154,7 @@ impl WebRenderer {
         }
 
         if let Some(w) = water {
-            self.render_water(gl, w, &self.camera_buffer, state);
+            self.render_water(gl, w, &self.camera_buffer, state, assets);
         }
 
         self.render_meshes(gl, state, assets, &self.camera_buffer, clip_plane, false);
@@ -196,13 +171,29 @@ impl WebRenderer {
         water: &Water,
         camera: &UniformBuffer<CameraData>,
         state: &State,
+        assets: &Assets,
     ) {
         let water_shader = self.shader_sys.get_shader(&ShaderKind::Water).unwrap();
         self.shader_sys.use_program(gl, ShaderKind::Water);
 
+        let water_material = MatWater {
+            shader: water_shader.clone(),
+            dudv: assets.get_tex("assets/textures/dudvmap.png"),
+            normal_map: assets.get_tex("assets/textures/normalmap.png"),
+            refraction: self.refraction_framebuffer.clone(),
+            reflection: self.reflection_framebuffer.clone(),
+            reflectivity: water.reflectivity,
+            fresnel_strength: water.fresnel_strength,
+            wave_speed: water.wave_speed,
+            use_refraction: water.use_refraction,
+            use_reflection: water.use_refraction,
+        };
+
         let water_tile = RenderableWaterTile::new(water_shader.clone(), water);
 
         let b = self.prepare_for_render(gl, &water_tile, "water", state);
+
+        water_material.bind_uniforms(gl, camera, state);
         water_tile.render(gl, &b, camera, state);
     }
 
@@ -214,7 +205,7 @@ impl WebRenderer {
         state: &State,
         assets: &Assets,
     ) {
-        let Framebuffer { framebuffer, .. } = &self.refraction_framebuffer;
+        let framebuffer = &self.refraction_framebuffer.framebuffer;
         gl.bind_framebuffer(GL::FRAMEBUFFER, framebuffer.as_ref());
 
         gl.viewport(0, 0, REFRACTION_TEXTURE_WIDTH, REFRACTION_TEXTURE_HEIGHT);
@@ -236,7 +227,7 @@ impl WebRenderer {
         state: &State,
         assets: &Assets,
     ) {
-        let Framebuffer { framebuffer, .. } = &self.reflection_framebuffer;
+        let framebuffer = &self.reflection_framebuffer.framebuffer;
         gl.bind_framebuffer(GL::FRAMEBUFFER, framebuffer.as_ref());
 
         gl.viewport(0, 0, REFLECTION_TEXTURE_WIDTH, REFLECTION_TEXTURE_HEIGHT);

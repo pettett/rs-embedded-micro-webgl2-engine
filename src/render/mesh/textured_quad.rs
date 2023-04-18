@@ -1,10 +1,10 @@
 use crate::app::State;
 //use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
-use super::rgl::uniform_buffer::UniformBuffer;
-use super::{BufferedMesh, CameraData};
 use crate::render::rgl::shader::Shader;
 use crate::render::rgl::shader::ShaderKind;
+use crate::render::rgl::uniform_buffer::UniformBuffer;
 use crate::render::Render;
+use crate::render::{BufferedMesh, CameraData};
 use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;

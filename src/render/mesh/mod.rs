@@ -4,6 +4,9 @@ mod gltf_mesh;
 
 use nalgebra::Vector3;
 
+pub mod textured_quad;
+pub mod water_tile;
+
 pub use self::gltf_mesh::*;
 // pub use self::non_skinned_mesh::*;
 // pub use self::skinned_mesh::*;
