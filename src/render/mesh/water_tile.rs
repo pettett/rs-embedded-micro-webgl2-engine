@@ -6,7 +6,6 @@ use crate::render::rgl::uniform_buffer::UniformBuffer;
 use crate::render::BufferedMesh;
 use crate::render::CameraData;
 use crate::render::Render;
-use crate::render::TextureUnit;
 use nalgebra;
 use nalgebra::{Isometry3, Matrix4, Vector3};
 use std::rc::Rc;

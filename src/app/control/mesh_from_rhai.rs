@@ -1,13 +1,16 @@
 use nalgebra::{ArrayStorage, Vector3};
 
-use crate::app::store::Mesh;
+use crate::app::{store::Mesh, Assets};
 
-impl TryFrom<rhai::Map> for Mesh {
-    type Error = &'static str;
+use super::from_rhai::FromRhai;
 
-    fn try_from(map: rhai::Map) -> Result<Mesh, Self::Error> {
+impl FromRhai for Mesh {
+    fn try_from_rhai(map: rhai::Map, assets: &mut Assets) -> Result<Mesh, &'static str> {
         let name = map["mesh"].clone().into_string().unwrap().to_owned();
-        let tex = map["texture"].clone().into_string().unwrap().to_owned();
+        let texture = map["texture"].clone().into_string().unwrap().to_owned();
+
+        let tex = assets.require_texture(texture);
+        let mesh = assets.require_gltf(name);
 
         // Load the mesh if it doesnt exist already
         // if assets.borrow_mut().get_gltf(&mesh).is_none() {
@@ -36,7 +39,7 @@ impl TryFrom<rhai::Map> for Mesh {
         log::info!("Position: {:?}", pos);
 
         Ok(super::Mesh {
-            name,
+            mesh,
             tex,
             position: Vector3::from_array_storage(ArrayStorage([pos])),
             rotation: Vector3::from_array_storage(ArrayStorage([rot])),

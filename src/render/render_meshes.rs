@@ -35,9 +35,10 @@ impl WebRenderer {
             return;
         }
 
-        let (_, no_skin) = (ShaderKind::SkinnedMesh, ShaderKind::NonSkinnedMesh);
-
-        let non_skinned_shader = self.shader_sys.get_shader(&no_skin).unwrap();
+        let non_skinned_shader = self
+            .shader_sys
+            .get_shader(&ShaderKind::NonSkinnedMesh)
+            .unwrap();
 
         self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
 
@@ -49,7 +50,7 @@ impl WebRenderer {
 
                 let mesh_mat = MatAlbedo {
                     shader: non_skinned_shader.clone(),
-                    tex: assets.get_tex(&ent.tex),
+                    tex: assets.get_tex(ent.tex),
                 };
 
                 mesh_mat.bind_uniforms(gl, camera, state);
@@ -61,7 +62,7 @@ impl WebRenderer {
                     flip_camera_y,
                 };
 
-                if let Some(doc) = assets.get_gltf(&ent.name) {
+                if let Some(doc) = assets.get_gltf(ent.mesh) {
                     for node in doc.doc.nodes() {
                         if let Some(m) = node.mesh() {
                             //get primitives
@@ -93,7 +94,7 @@ impl WebRenderer {
                                 let b = self.prepare_for_render(
                                     gl,
                                     &meshdata,
-                                    &format!("{}{}{}", &ent.name, m.index(), p.index()),
+                                    &format!("{}{}{}", &ent.mesh, m.index(), p.index()),
                                     state,
                                 );
 

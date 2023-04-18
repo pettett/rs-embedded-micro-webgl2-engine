@@ -1,6 +1,13 @@
+use crate::app::Assets;
+use crate::render::rgl::texture::Tex;
 use js_sys::Uint8Array;
+use std::cell::RefCell;
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
+use web_sys::HtmlImageElement;
+use web_sys::WebGl2RenderingContext as GL;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
 ///Top 10 most cursed pieces of code: number 1:
@@ -32,4 +39,24 @@ pub async fn fetch(uri: &str) -> Result<Vec<u8>, JsValue> {
 
     // Send the JSON response back to JS.
     Ok(bytes)
+}
+pub fn fetch_texture_image(gl: Rc<GL>, assets: Rc<RefCell<Assets>>, src: String) {
+    let image = Rc::new(RefCell::new(HtmlImageElement::new().unwrap()));
+    let image_clone = Rc::clone(&image);
+
+    let src_clone = src.clone();
+
+    let onload = Closure::wrap(Box::new(move || {
+        assets.borrow_mut().register_tex(
+            src_clone.clone(),
+            Tex::new_from_img(&gl, image_clone.clone()),
+        );
+    }) as Box<dyn Fn()>);
+
+    let image = image.borrow_mut();
+
+    image.set_onload(Some(onload.as_ref().unchecked_ref()));
+    image.set_src(&src);
+
+    onload.forget();
 }

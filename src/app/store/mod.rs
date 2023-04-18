@@ -29,6 +29,8 @@ impl Store {
 
 pub struct State {
     clock: f32,
+    next_log: f32,
+    dt_rolling: f32,
     pub width: u32,
     pub height: u32,
     camera: Camera,
@@ -45,8 +47,8 @@ pub enum Entity {
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
-    pub name: String,
-    pub tex: String,
+    pub mesh: usize,
+    pub tex: usize,
     pub position: Vector3<f32>,
     pub rotation: Vector3<f32>,
     pub update: Option<String>,
@@ -57,6 +59,8 @@ impl State {
         State {
             /// Time elapsed since the application started, in milliseconds
             clock: 0.,
+            next_log: 0.,
+            dt_rolling: 0.,
             camera: Camera::new(),
             mouse: Mouse::default(),
             width: 1,
@@ -85,6 +89,14 @@ impl State {
         match msg {
             Msg::AdvanceClock(dt) => {
                 self.clock += dt;
+
+                //exponential falloff rolling average
+                self.dt_rolling = self.dt_rolling * 0.8 + dt * 0.2;
+
+                if self.clock > self.next_log {
+                    log::trace!("{:.3}", 1000.0 / self.dt_rolling);
+                    self.next_log += 1000.0;
+                }
             }
             Msg::MouseDown(x, y) => {
                 self.mouse.set_pressed(true);
@@ -111,7 +123,6 @@ impl State {
             Msg::Zoom(zoom) => {
                 self.camera.zoom(*zoom);
             }
-            _ => (),
         }
     }
 }
@@ -125,10 +136,4 @@ pub enum Msg {
     MouseUp,
     MouseMove(i32, i32),
     Zoom(f32),
-    SetReflectivity(f32),
-    SetFresnel(f32),
-    SetWaveSpeed(f32),
-    UseReflection(bool),
-    UseRefraction(bool),
-    ShowScenery(bool),
 }

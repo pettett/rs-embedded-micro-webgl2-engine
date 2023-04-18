@@ -2,8 +2,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use rhai::{Dynamic, Engine, ParseError, Scope, AST};
 
-use crate::fetch;
+pub mod from_rhai;
 mod mesh_from_rhai;
+use self::from_rhai::FromRhai;
+
 use super::{store::Mesh, Assets, LuaMsg, Store};
 pub struct Control {
     engine: Engine,
@@ -156,17 +158,28 @@ impl Control {
 
             let e = match entity["type"].clone().into_string()?.as_str() {
                 "mesh" => {
-                    let m = super::Mesh::try_from(entity).unwrap();
+                    let m = super::Mesh::try_from_rhai(entity, &mut assets.borrow_mut()).unwrap();
 
                     super::Entity::EntMesh(Rc::new(RefCell::new(m)))
                 }
-                "water" => super::Entity::EntWater(crate::app::store::water::Water {
-                    reflectivity: f32_or(&entity, "reflectivity", 0.5),
-                    fresnel_strength: f32_or(&entity, "fresnel", 0.5),
-                    wave_speed: f32_or(&entity, "wave_speed", 0.5),
-                    use_refraction: bool_or(&entity, "use_refraction", true),
-                    use_reflection: bool_or(&entity, "use_reflection", true),
-                }),
+                "water" => {
+                    let d = assets
+                        .borrow_mut()
+                        .require_texture("assets/textures/dudvmap.png".to_owned());
+                    let n = assets
+                        .borrow_mut()
+                        .require_texture("assets/textures/normalmap.png".to_owned());
+
+                    super::Entity::EntWater(crate::app::store::water::Water {
+                        dudv: d,
+                        normal: n,
+                        reflectivity: f32_or(&entity, "reflectivity", 0.5),
+                        fresnel_strength: f32_or(&entity, "fresnel", 0.5),
+                        wave_speed: f32_or(&entity, "wave_speed", 0.5),
+                        use_refraction: bool_or(&entity, "use_refraction", true),
+                        use_reflection: bool_or(&entity, "use_reflection", true),
+                    })
+                }
                 _ => return Err("Unknown Entity Type"),
             };
             //log::info!("{:?}", e);

@@ -3,7 +3,6 @@ use self::material::Material;
 pub(self) use self::mesh::*;
 pub(self) use self::render_trait::*;
 use self::rgl::framebuffer::*;
-use self::rgl::texture::TexUnit;
 use self::rgl::uniform_buffer::UniformBuffer;
 use self::rgl::Framebuffer;
 pub use self::texture_unit::*;
@@ -17,7 +16,6 @@ use crate::render::rgl::shader::ShaderSystem;
 use crate::render::textured_quad::TexturedQuad;
 use nalgebra::Matrix4;
 use nalgebra::Point4;
-use nalgebra::Vector4;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use web_sys::WebGl2RenderingContext as GL;
@@ -31,40 +29,21 @@ mod render_meshes;
 mod render_trait;
 pub mod rgl;
 mod texture_unit;
+use rgl::vao::Vao;
 
 struct VaoExtension {
     vaos: RefCell<HashMap<String, (Vao, BufferedMesh)>>,
 }
 
-struct Vao {
-    vao: web_sys::WebGlVertexArrayObject,
-}
-
-impl Vao {
-    pub fn new(gl: &WebGl2RenderingContext) -> Vao {
-        let vao = gl
-            .create_vertex_array()
-            .ok_or("Could not create vertex array object")
-            .unwrap();
-        Vao { vao }
-    }
-    pub fn bind(&self, gl: &WebGl2RenderingContext) {
-        gl.bind_vertex_array(Some(&self.vao))
-    }
-    pub fn delete(&self, gl: &WebGl2RenderingContext) {
-        gl.delete_vertex_array(Some(&self.vao))
-    }
-}
-
 /// Mirrors the glsl:
 ///```
-///layout(std140, binding = 2) uniform MatrixBlock
+///layout(std140) uniform MatrixBlock
 ///{
-///	mat4 projection;
-///	mat4 view;
-///	vec4 pos;
-///  } camera;
-/// ```
+///		mat4 projection;
+///		mat4 view;
+///		vec4 pos;
+///} camera;
+///```
 pub struct CameraData {
     projection: Matrix4<f32>,
     view: Matrix4<f32>,
@@ -73,8 +52,8 @@ pub struct CameraData {
 
 pub struct WebRenderer {
     shader_sys: ShaderSystem,
-    #[allow(unused)]
-    depth_texture_ext: Option<js_sys::Object>,
+    //    #[allow(unused)]
+    //    depth_texture_ext: Option<js_sys::Object>,
     refraction_framebuffer: std::rc::Rc<Framebuffer>,
     reflection_framebuffer: std::rc::Rc<Framebuffer>,
     vao_ext: VaoExtension,
@@ -86,9 +65,9 @@ impl WebRenderer {
     pub fn new(gl: &WebGl2RenderingContext) -> WebRenderer {
         let shader_sys = ShaderSystem::new(&gl);
 
-        let depth_texture_ext = gl
-            .get_extension("WEBGL_depth_texture")
-            .expect("Depth texture extension");
+        //let depth_texture_ext = gl
+        //    .get_extension("WEBGL_depth_texture")
+        //    .expect("Depth texture extension");
 
         let vao_ext = VaoExtension {
             vaos: RefCell::new(HashMap::new()),
@@ -100,7 +79,7 @@ impl WebRenderer {
             std::rc::Rc::new(WebRenderer::create_reflection_framebuffer(&gl).unwrap());
 
         WebRenderer {
-            depth_texture_ext,
+            //    depth_texture_ext,
             shader_sys,
             refraction_framebuffer,
             reflection_framebuffer,
@@ -178,8 +157,8 @@ impl WebRenderer {
 
         let water_material = MatWater {
             shader: water_shader.clone(),
-            dudv: assets.get_tex("assets/textures/dudvmap.png"),
-            normal_map: assets.get_tex("assets/textures/normalmap.png"),
+            dudv: assets.get_tex(water.dudv),
+            normal_map: assets.get_tex(water.normal),
             refraction: self.refraction_framebuffer.clone(),
             reflection: self.reflection_framebuffer.clone(),
             reflectivity: water.reflectivity,

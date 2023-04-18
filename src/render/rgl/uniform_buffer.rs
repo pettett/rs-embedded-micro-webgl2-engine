@@ -1,7 +1,5 @@
-use js_sys::WebAssembly;
 use std::marker::PhantomData;
 use std::mem;
-use wasm_bindgen::JsCast;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 

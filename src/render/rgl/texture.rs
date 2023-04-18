@@ -1,4 +1,3 @@
-use crate::render::TextureUnit;
 use wasm_bindgen::JsValue;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;

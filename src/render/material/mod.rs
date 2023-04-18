@@ -9,7 +9,7 @@ use web_sys::WebGl2RenderingContext as GL;
 
 use crate::app::store::State;
 
-use super::{rgl::uniform_buffer::UniformBuffer, BufferedMesh, CameraData};
+use super::{rgl::uniform_buffer::UniformBuffer, CameraData};
 
 pub trait Material {
     fn bind_uniforms(&self, gl: &GL, camera: &UniformBuffer<CameraData>, state: &State);

@@ -20,7 +20,6 @@ extern crate wasm_bindgen;
 pub(crate) use self::app::*;
 use self::canvas::*;
 use self::render::*;
-use crate::load_texture_img::load_texture_image;
 use console_error_panic_hook;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
@@ -29,7 +28,6 @@ use web_sys::*;
 mod app;
 mod canvas;
 mod fetch;
-mod load_texture_img;
 mod render;
 
 /// Used to run the application from the web
@@ -53,17 +51,14 @@ impl WebClient {
 
         let renderer = WebRenderer::new(&gl);
 
-        //Load default assets, mainly error texture and possibly primitives
-        app.assets.borrow_mut().load(&gl);
-
         WebClient { app, gl, renderer }
     }
 
     /// Start our WebGL Water application. `index.html` will call this function in order
     /// to begin rendering.
     pub fn start(&self) -> Result<(), JsValue> {
-        let gl = &self.gl;
-
+        //Load default assets, mainly error texture and possibly primitives
+        self.app.assets.borrow_mut().load(&self.gl);
         Ok(())
     }
 
@@ -103,11 +98,6 @@ impl WebClient {
         };
 
         //load requirements - meshes, textures, etc
-
-        self.app
-            .assets
-            .borrow_mut()
-            .mark_requirements(&self.app.store.borrow());
 
         Assets::load_requirements(self.app.assets.clone(), self.gl.clone()).await;
 
