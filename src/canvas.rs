@@ -19,7 +19,7 @@ pub fn create_webgl_context(app: Rc<App>) -> Result<WebGl2RenderingContext, JsVa
 
     gl.clear_color(0.0, 0.0, 0.0, 1.0);
     gl.enable(GL::DEPTH_TEST);
-
+    gl.enable(GL::CULL_FACE);
     Ok(gl)
 }
 
