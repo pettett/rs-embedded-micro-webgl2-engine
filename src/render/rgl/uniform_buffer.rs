@@ -17,7 +17,7 @@ impl<T: Sized> UniformBuffer<T> {
 
         let d = vec![0u8; mem::size_of::<T>()];
 
-        gl.buffer_data_with_u8_array(GL::UNIFORM_BUFFER, &d[..], GL::STATIC_DRAW); // allocate memory
+        gl.buffer_data_with_u8_array(GL::UNIFORM_BUFFER, &d[..], GL::DYNAMIC_DRAW); // allocate memory
 
         gl.bind_buffer(GL::UNIFORM_BUFFER, None);
 
@@ -38,9 +38,9 @@ impl<T: Sized> UniformBuffer<T> {
         let data_array = super::to_array_buffer_view(d);
 
         gl.bind_buffer(GL::UNIFORM_BUFFER, self.buffer.as_ref());
-        //buffer memory
+        //buffer memory - use sub data to stop reallocation
 
-        gl.buffer_data_with_array_buffer_view(GL::UNIFORM_BUFFER, &data_array, GL::STATIC_DRAW);
+        gl.buffer_sub_data_with_i32_and_array_buffer_view(GL::UNIFORM_BUFFER, 0, &data_array);
     }
     /// Bind uniform buffer for use in shaders
     pub fn bind_base(

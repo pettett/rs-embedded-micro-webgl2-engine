@@ -67,6 +67,8 @@ return data;`
 
 			window.webClient = webClient
 
+			window.addEventListener('keydown', (e) => webClient.on_key_down(e.keyCode));
+			window.addEventListener('keyup', (e) => webClient.on_key_up(e.keyCode));
 
 
 			let time = Date.now();
@@ -105,7 +107,7 @@ return data;`
 let data= [ 
 	#{
 		type : "mesh",
-		position : [0,-3,0],
+		position : [0,-1.8,0],
 				scale: [0.04,0.04,0.04],
 		mesh : "assets/models/Sponza.gltf",
 		texture : "assets/textures/stone-texture.png",

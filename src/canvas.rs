@@ -39,6 +39,9 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
     attach_mouse_move_handler(&canvas, Rc::clone(&app))?;
     attach_mouse_wheel_handler(&canvas, Rc::clone(&app))?;
 
+    //attach_key_up_handler(&canvas, Rc::clone(&app))?;
+    //attach_key_down_handler(&canvas, Rc::clone(&app))?;
+
     attach_touch_start_handler(&canvas, Rc::clone(&app))?;
     attach_touch_move_handler(&canvas, Rc::clone(&app))?;
     attach_touch_end_handler(&canvas, Rc::clone(&app))?;

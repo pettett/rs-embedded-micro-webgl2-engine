@@ -1,7 +1,10 @@
+pub mod keyboard;
 mod mouse;
 
 use nalgebra::Vector3;
 
+use self::keyboard::KeyCode;
+use self::keyboard::Keyboard;
 use self::mouse::*;
 
 mod camera;
@@ -34,6 +37,7 @@ pub struct State {
     pub width: u32,
     pub height: u32,
     camera: Camera,
+    keyboard: Keyboard,
     mouse: Mouse,
     show_scenery: bool,
     pub entities: Vec<Box<Entity>>,
@@ -64,6 +68,7 @@ impl State {
             next_log: 0.,
             dt_rolling: 0.,
             camera: Camera::new(),
+            keyboard: Keyboard::default(),
             mouse: Mouse::default(),
             width: 1,
             height: 1,
@@ -91,6 +96,8 @@ impl State {
         match msg {
             Msg::AdvanceClock(dt) => {
                 self.clock += dt;
+
+                self.camera.update(*dt, &self.keyboard);
 
                 //exponential falloff rolling average
                 self.dt_rolling = self.dt_rolling * 0.8 + dt * 0.2;
@@ -125,6 +132,8 @@ impl State {
             Msg::Zoom(zoom) => {
                 self.camera.zoom(*zoom);
             }
+            Msg::KeyDown(key_code) => self.keyboard.set_pressed(*key_code, true),
+            Msg::KeyUp(key_code) => self.keyboard.set_pressed(*key_code, false),
         }
     }
 }
@@ -137,5 +146,7 @@ pub enum Msg {
     MouseDown(i32, i32),
     MouseUp,
     MouseMove(i32, i32),
+    KeyDown(KeyCode),
+    KeyUp(KeyCode),
     Zoom(f32),
 }

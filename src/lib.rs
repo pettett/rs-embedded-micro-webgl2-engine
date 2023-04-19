@@ -15,11 +15,14 @@
 //!   - https://www.youtube.com/watch?v=HusvGeEDU_U&list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
 
 #![deny(missing_docs)]
-
+extern crate num;
+#[macro_use]
+extern crate num_derive;
 extern crate wasm_bindgen;
 pub(crate) use self::app::*;
 use self::canvas::*;
 use self::render::*;
+use app::keyboard::KeyCode;
 use console_error_panic_hook;
 use gltf::image::Source;
 use gltf::Material;
@@ -27,6 +30,8 @@ use render::material::MatAlbedo;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
+
+use crate::num::FromPrimitive;
 
 mod app;
 mod canvas;
@@ -83,6 +88,18 @@ impl WebClient {
                 }
             }
             Err(_) => (),
+        }
+    }
+    /// To be called on the 'keydown' event
+    pub fn on_key_down(&mut self, key_code: u32) {
+        if let Some(k) = KeyCode::from_u32(key_code) {
+            self.app.store.borrow_mut().msg(&Msg::KeyDown(k));
+        }
+    }
+    /// To be called on the 'keyup' event
+    pub fn on_key_up(&mut self, key_code: u32) {
+        if let Some(k) = KeyCode::from_u32(key_code) {
+            self.app.store.borrow_mut().msg(&Msg::KeyUp(k));
         }
     }
 

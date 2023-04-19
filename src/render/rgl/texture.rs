@@ -64,8 +64,8 @@ impl Tex {
 
         gl.pixel_storei(GL::UNPACK_FLIP_Y_WEBGL, 1);
 
-        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::NEAREST as i32);
-        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::NEAREST as i32);
+        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::LINEAR as i32);
+        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::LINEAR as i32);
 
         gl.tex_image_2d_with_u32_and_u32_and_html_image_element(
             GL::TEXTURE_2D,

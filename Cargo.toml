@@ -18,7 +18,9 @@ itertools="0.10.5"
 wasm-bindgen-futures = "0.4.34"
 log = "0.4.17"
 wasm-logger = "0.2.0"
-
+num = "0.4"
+num-derive = "0.3"
+num-traits = "0.2"
 
 [dependencies.rhai]
 version="1.13.0"
@@ -40,6 +42,7 @@ features = [
   'HtmlImageElement', 
   'InputEvent',
   'MouseEvent',
+  'KeyboardEvent',
   'Node',
   'Touch',
   'TouchEvent',

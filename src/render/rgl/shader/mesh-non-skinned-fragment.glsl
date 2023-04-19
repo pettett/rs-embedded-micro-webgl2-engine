@@ -22,7 +22,11 @@ uniform sampler2D meshTexture;
 out vec4 fragColor;
 
 void main(void) {
-    if (dot(worldPosition, clipPlane) < 0.0) {
+
+
+    vec4 textureColor = texture(meshTexture, vUvs);
+
+    if (dot(worldPosition, clipPlane) < 0.0 || textureColor.a < 0.9) {
         discard;
     }
 
@@ -37,7 +41,7 @@ void main(void) {
     vec3 specular = shininess * spec * vec3(0.628281, 0.555802, 0.366065);
 
     vec4 lighting = vec4(ambient + diffuse + specular, 1.0);
-    vec4 textureColor = texture(meshTexture, vUvs);
 
     fragColor = textureColor * lighting;
+
 }
