@@ -21,6 +21,9 @@ pub(crate) use self::app::*;
 use self::canvas::*;
 use self::render::*;
 use console_error_panic_hook;
+use gltf::image::Source;
+use gltf::Material;
+use render::material::MatAlbedo;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -101,6 +104,12 @@ impl WebClient {
 
         Assets::load_requirements(self.app.assets.clone(), self.gl.clone()).await;
 
+        self.app.assets.borrow_mut().require_mesh_textures();
+
+        //Load materials from models
+
+        Assets::load_requirements(self.app.assets.clone(), self.gl.clone()).await;
+
         s
     }
 
@@ -111,14 +120,5 @@ impl WebClient {
             &self.app.store.borrow().state,
             &self.app.assets.borrow(),
         );
-    }
-    /// Load a new gltf mesh that can be used by entities
-    pub fn load_mesh(&self, mesh_name: String, gltf: &[u8]) -> Result<(), String> {
-        self.app
-            .assets
-            .try_borrow_mut()
-            .unwrap()
-            .load_gltf(mesh_name, gltf)
-            .map_err(|e| e.to_string())
     }
 }

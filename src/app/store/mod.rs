@@ -49,7 +49,9 @@ pub enum Entity {
 pub struct Mesh {
     pub mesh: usize,
     pub tex: usize,
+
     pub position: Vector3<f32>,
+    pub scale: Vector3<f32>,
     pub rotation: Vector3<f32>,
     pub update: Option<String>,
 }

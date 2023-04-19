@@ -11,6 +11,7 @@ use gltf::mesh::util::ReadTexCoords;
 use gltf::{buffer::Data, Primitive};
 use nalgebra;
 use nalgebra::Isometry3;
+use nalgebra::Scale3;
 use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
@@ -112,8 +113,11 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
         gl.uniform4fv_with_f32_array(clip_plane_uni.as_ref(), &mut opts.clip_plane.clone()[..]);
 
         let model = Isometry3::new(opts.pos, opts.rot);
+
         let mut model_array = [0.; 16];
-        model_array.copy_from_slice(model.to_homogeneous().as_slice());
+        model_array.copy_from_slice(
+            (model.to_homogeneous() * Scale3::from(opts.scale).to_homogeneous()).as_slice(),
+        );
         gl.uniform_matrix4fv_with_f32_array(model_uni.as_ref(), false, &mut model_array);
 
         let block_index = shader.get_uniform_block_index(gl, "Camera");

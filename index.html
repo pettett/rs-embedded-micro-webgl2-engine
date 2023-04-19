@@ -102,6 +102,17 @@ return data;`
 
 
 	<textarea id="onload" rows="15" cols="63" style="outline: none;" autocorrect="off" autocapitalize="none" spellcheck="false" tabindex="0" wrap="off">
+let data= [ 
+	#{
+		type : "mesh",
+		position : [0,-3,0],
+				scale: [0.04,0.04,0.04],
+		mesh : "assets/models/Sponza.gltf",
+		texture : "assets/textures/stone-texture.png",
+	 
+	}, 
+]; 
+return data;
 	</textarea>
 	<button onclick="window.restart()">Restart</button>
 	<p id="onloadout"></p>

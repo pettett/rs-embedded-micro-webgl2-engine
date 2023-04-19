@@ -1,3 +1,4 @@
+use crate::app::Mat;
 // use crate::render::mesh::MeshRenderOpts;
 // use crate::render::mesh::NonSkinnedMesh;
 // use crate::render::mesh::SkinnedMesh;
@@ -48,15 +49,9 @@ impl WebRenderer {
             if let crate::app::Entity::EntMesh(mesh) = &**entity {
                 let ent = mesh.borrow();
 
-                let mesh_mat = MatAlbedo {
-                    shader: non_skinned_shader.clone(),
-                    tex: assets.get_tex(ent.tex),
-                };
-
-                mesh_mat.bind_uniforms(gl, camera, state);
-
                 let mut mesh_opts = MeshRenderOpts {
                     pos: ent.position,
+                    scale: ent.scale,
                     rot: ent.rotation,
                     clip_plane,
                     flip_camera_y,
@@ -64,29 +59,53 @@ impl WebRenderer {
 
                 if let Some(doc) = assets.get_gltf(ent.mesh) {
                     for node in doc.doc.nodes() {
+                        match node.transform() {
+                            gltf::scene::Transform::Matrix { matrix: _ } => todo!(),
+                            gltf::scene::Transform::Decomposed {
+                                translation,
+                                rotation: _,
+                                scale,
+                            } => {
+                                mesh_opts.pos = ent.position
+                                    + Vector3::from_array_storage(ArrayStorage([translation]));
+
+                                mesh_opts.scale =
+                                    Vector3::from_array_storage(ArrayStorage([scale]));
+                            }
+                        }
+
                         if let Some(m) = node.mesh() {
                             //get primitives
                             for p in m.primitives() {
-                                match node.transform() {
-                                    gltf::scene::Transform::Matrix { matrix: _ } => todo!(),
-                                    gltf::scene::Transform::Decomposed {
-                                        translation,
-                                        rotation: _,
-                                        scale: _,
-                                    } => {
-                                        mesh_opts.pos = ent.position
-                                            + Vector3::from_array_storage(ArrayStorage([
-                                                translation,
-                                            ]));
-                                    }
-                                }
-
                                 let meshdata = NonSkinnedGltfMesh {
                                     mesh: &p,
                                     buffers: &doc.buffers,
                                     shader: non_skinned_shader.clone(),
                                     opts: &mesh_opts,
                                 };
+
+                                // if let Uri { uri, .. } = p
+                                //     .material()
+                                //     .pbr_metallic_roughness()
+                                //     .base_color_texture()
+                                //     .unwrap()
+                                //     .texture()
+                                //     .source()
+                                //     .source()
+                                // {}
+
+                                let tex =
+                                    match p.material().index().map(|i| *assets.get_material(i)) {
+                                        Some(Some(m)) => m.tex,
+                                        _ => ent.tex,
+                                    };
+
+                                let mesh_mat = MatAlbedo {
+                                    shader: non_skinned_shader.clone(),
+                                    tex: assets.get_tex(tex),
+                                };
+
+                                mesh_mat.bind_uniforms(gl, camera, state);
 
                                 //    web_sys::console::log_1(&p.index().into());
                                 //web_sys::console::log_1(&"Rendering mesh".into());

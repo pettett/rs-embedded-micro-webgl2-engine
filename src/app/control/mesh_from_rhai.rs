@@ -32,6 +32,11 @@ impl FromRhai for Mesh {
             None => [0.0; 3],
         };
 
+        let scale = match map.get("scale") {
+            Some(d) => super::to_vec3(d)?,
+            None => [1.0; 3],
+        };
+
         let update = map
             .get("update")
             .map(|f| f.clone().cast::<rhai::FnPtr>().fn_name().to_owned());
@@ -41,6 +46,7 @@ impl FromRhai for Mesh {
         Ok(super::Mesh {
             mesh,
             tex,
+            scale: Vector3::from_array_storage(ArrayStorage([scale])),
             position: Vector3::from_array_storage(ArrayStorage([pos])),
             rotation: Vector3::from_array_storage(ArrayStorage([rot])),
             update,

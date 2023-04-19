@@ -14,6 +14,7 @@ pub use self::gltf_mesh::*;
 pub struct MeshRenderOpts {
     pub pos: Vector3<f32>,
     pub rot: Vector3<f32>,
+    pub scale: Vector3<f32>,
     pub clip_plane: [f32; 4],
     pub flip_camera_y: bool,
 }
