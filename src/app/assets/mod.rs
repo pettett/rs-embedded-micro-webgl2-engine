@@ -47,7 +47,10 @@ impl<T> AssetStore<T> {
     }
 
     pub fn get(&self, asset_id: usize) -> Option<&T> {
-        self.assets[asset_id].as_ref()
+        match self.assets.get(asset_id) {
+            Some(a) => a.as_ref(),
+            None => None,
+        }
     }
 }
 impl<T> Default for AssetStore<T> {
@@ -60,9 +63,10 @@ impl<T> Default for AssetStore<T> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Mat {
     pub tex: usize,
+    pub normal: usize,
 }
 
 pub struct Assets {
@@ -189,10 +193,11 @@ impl Assets {
         self.gltf.get(gltf_name)
     }
     pub fn require_mesh_textures(&mut self) {
-        let mut uris = Vec::<(usize, String)>::new();
+        let mut uris = Vec::<(usize, (String, String))>::new();
 
         for (path, gltf_name) in &self.gltf.asset_indexes {
             let path_head = "assets/textures/".to_owned();
+            //TODO: This is a bad way of loading materials
 
             if let Some(m) = self.get_gltf(*gltf_name) {
                 for mat in m.doc.materials() {
@@ -201,18 +206,27 @@ impl Assets {
                         .base_color_texture()
                         .map(|m| m.texture().source().source())
                     {
-                        let mut u = path_head.clone();
-                        u.push_str(uri);
-                        uris.push((mat.index().unwrap(), u));
+                        let mut u_col = path_head.clone();
+                        u_col.push_str(uri);
+
+                        if let Some(Source::Uri { uri, mime_type }) =
+                            mat.normal_texture().map(|m| m.texture().source().source())
+                        {
+                            let mut u_norm = path_head.clone();
+                            u_norm.push_str(uri);
+
+                            uris.push((mat.index().unwrap(), (u_col, u_norm)));
+                        }
                     };
                 }
             }
         }
         //TODO: This will break with more than one gltf with materials
-        for (id, uri) in uris {
-            let tex = self.require_texture(uri);
+        for (id, (uri_col, uri_norm)) in uris {
+            let tex = self.require_texture(uri_col);
+            let normal = self.require_texture(uri_norm);
 
-            self.load_material(id, Mat { tex });
+            self.load_material(id, Mat { tex, normal });
         }
     }
 }

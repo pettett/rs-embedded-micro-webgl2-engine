@@ -19,6 +19,7 @@ extern crate num;
 #[macro_use]
 extern crate num_derive;
 extern crate wasm_bindgen;
+
 pub(crate) use self::app::*;
 use self::canvas::*;
 use self::render::*;

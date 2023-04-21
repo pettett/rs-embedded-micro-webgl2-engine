@@ -3,6 +3,7 @@ use self::material::Material;
 pub(self) use self::mesh::*;
 pub(self) use self::render_trait::*;
 use self::rgl::framebuffer::*;
+use self::rgl::texture::TexUnit;
 use self::rgl::uniform_buffer::UniformBuffer;
 use self::rgl::Framebuffer;
 pub use self::texture_unit::*;
@@ -142,6 +143,14 @@ impl WebRenderer {
             self.render_refraction_visual(gl, &self.camera_buffer, state);
             self.render_reflection_visual(gl, &self.camera_buffer, state);
         }
+
+        //DEBUG: Display 30 loaded textures
+
+        // let u = TexUnit::new(gl, 10);
+        // for i in 0..30 {
+        //     assets.get_tex(i).bind_at(gl, &u);
+        //     self.render_visual(gl, &self.camera_buffer, state, u, 70 * i as u16, 70);
+        // }
     }
 
     fn render_water(
@@ -220,6 +229,27 @@ impl WebRenderer {
         }
     }
 
+    fn render_visual(
+        &self,
+        gl: &WebGl2RenderingContext,
+        camera: &UniformBuffer<CameraData>,
+        state: &State,
+        tex_unit: TexUnit,
+        x: u16,
+        y: u16,
+    ) {
+        let quad_shader = self
+            .shader_sys
+            .get_shader(&ShaderKind::TexturedQuad)
+            .unwrap();
+        self.shader_sys.use_program(gl, ShaderKind::TexturedQuad);
+
+        let textured_quad = TexturedQuad::new(x, y, 35, 35, tex_unit, quad_shader.clone());
+
+        let b = self.prepare_for_render(gl, &textured_quad, "VisualMesh", state);
+        textured_quad.render(gl, &b, camera, state);
+    }
+
     fn render_refraction_visual(
         &self,
         gl: &WebGl2RenderingContext,
@@ -231,14 +261,16 @@ impl WebRenderer {
             .get_shader(&ShaderKind::TexturedQuad)
             .unwrap();
         self.shader_sys.use_program(gl, ShaderKind::TexturedQuad);
+
         let textured_quad = TexturedQuad::new(
             0,
-            state.height as u16,
             75,
             75,
-            TextureUnit::Refraction as u8,
+            75,
+            TexUnit::new(gl, TextureUnit::Refraction.texture_unit() as u32),
             quad_shader.clone(),
         );
+
         let b = self.prepare_for_render(gl, &textured_quad, "RefractionVisual", state);
         textured_quad.render(gl, &b, camera, state);
     }
@@ -259,7 +291,7 @@ impl WebRenderer {
             state.height as u16,
             75,
             75,
-            TextureUnit::Reflection as u8,
+            TexUnit::new(gl, TextureUnit::Reflection.texture_unit() as u32),
             quad_shader.clone(),
         );
 

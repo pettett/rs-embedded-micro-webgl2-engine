@@ -13,6 +13,8 @@ use self::camera::*;
 pub mod water;
 use self::water::*;
 
+use super::Mat;
+
 pub struct Store {
     // information about game state
     pub state: State,
@@ -52,7 +54,7 @@ pub enum Entity {
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub mesh: usize,
-    pub tex: usize,
+    pub mat: Mat,
 
     pub position: Vector3<f32>,
     pub scale: Vector3<f32>,

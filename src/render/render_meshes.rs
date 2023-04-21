@@ -69,8 +69,11 @@ impl WebRenderer {
                                 mesh_opts.pos = ent.position
                                     + Vector3::from_array_storage(ArrayStorage([translation]));
 
-                                mesh_opts.scale =
-                                    Vector3::from_array_storage(ArrayStorage([scale]));
+                                let s = Vector3::from_array_storage(ArrayStorage([scale]));
+
+                                mesh_opts.scale.x *= s.x;
+                                mesh_opts.scale.y *= s.y;
+                                mesh_opts.scale.z *= s.z;
                             }
                         }
 
@@ -94,15 +97,16 @@ impl WebRenderer {
                                 //     .source()
                                 // {}
 
-                                let tex =
+                                let mat =
                                     match p.material().index().map(|i| *assets.get_material(i)) {
-                                        Some(Some(m)) => m.tex,
-                                        _ => ent.tex,
+                                        Some(Some(m)) => m,
+                                        _ => ent.mat,
                                     };
 
                                 let mesh_mat = MatAlbedo {
                                     shader: non_skinned_shader.clone(),
-                                    tex: assets.get_tex(tex),
+                                    tex: assets.get_tex(mat.tex),
+                                    normal: assets.get_tex(mat.normal),
                                 };
 
                                 mesh_mat.bind_uniforms(gl, camera, state);

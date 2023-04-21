@@ -62,9 +62,13 @@ impl Tex {
     pub fn new_from_img(gl: &GL, image: std::rc::Rc<std::cell::RefCell<HtmlImageElement>>) -> Tex {
         let texture = Self::create_texture(gl);
 
-        gl.pixel_storei(GL::UNPACK_FLIP_Y_WEBGL, 1);
+        //    gl.pixel_storei(GL::UNPACK_FLIP_Y_WEBGL, 1);
 
-        gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MIN_FILTER, GL::LINEAR as i32);
+        gl.tex_parameteri(
+            GL::TEXTURE_2D,
+            GL::TEXTURE_MIN_FILTER,
+            GL::NEAREST_MIPMAP_LINEAR as i32,
+        );
         gl.tex_parameteri(GL::TEXTURE_2D, GL::TEXTURE_MAG_FILTER, GL::LINEAR as i32);
 
         gl.tex_image_2d_with_u32_and_u32_and_html_image_element(
@@ -76,6 +80,9 @@ impl Tex {
             &image.borrow(),
         )
         .expect("Texture image 2d");
+
+        gl.generate_mipmap(GL::TEXTURE_2D);
+
         Tex { texture }
     }
 
@@ -87,7 +94,7 @@ impl Tex {
 
         // black, magenta, magenta, black
         let data_array = super::to_array_buffer_view(&[
-            0, 0, 0, 255, 255, 0, 255, 255, 255, 0, 255, 255, 0, 0, 0, 255,
+            0, 255, 0, 255, 255, 0, 255, 255, 255, 0, 255, 255, 0, 255, 0, 255,
         ]);
 
         gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_array_buffer_view(

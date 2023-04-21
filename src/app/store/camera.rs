@@ -16,7 +16,7 @@ enum Mode {
     Orbit,
     FPS,
 }
-const MODE: Mode = Mode::FPS;
+const MODE: Mode = Mode::Orbit;
 
 impl Camera {
     pub fn new() -> Camera {
@@ -152,16 +152,16 @@ impl Camera {
 
     pub fn update(&mut self, dt: f32, keyboard: &Keyboard) {
         if let Mode::FPS = MODE {
-            let x = if (keyboard.get_pressed(KeyCode::W)) {
+            let x = if keyboard.get_pressed(KeyCode::W) {
                 dt * 0.005
-            } else if (keyboard.get_pressed(KeyCode::S)) {
+            } else if keyboard.get_pressed(KeyCode::S) {
                 -dt * 0.005
             } else {
                 0.
             };
-            let z = if (keyboard.get_pressed(KeyCode::A)) {
+            let z = if keyboard.get_pressed(KeyCode::A) {
                 dt * 0.005
-            } else if (keyboard.get_pressed(KeyCode::D)) {
+            } else if keyboard.get_pressed(KeyCode::D) {
                 -dt * 0.005
             } else {
                 0.

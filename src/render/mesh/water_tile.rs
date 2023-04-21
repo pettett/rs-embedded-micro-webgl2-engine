@@ -42,10 +42,10 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         // plane. In our render function we'll scale this quad into the water size that we want.
         // x and z values, y is omitted since this is a flat surface. We set it in the vertex shader
         let vertices: [f32; 8] = [
-            -3.5, 3.5, // Bottom Left
-            3.5, 3.5, // Bottom Right
-            3.5, -3.5, // Top Right
-            -3.5, -3.5, // Top Left
+            -30.5, 30.5, // Bottom Left
+            30.5, 30.5, // Bottom Right
+            30.5, -30.5, // Top Right
+            -30.5, -30.5, // Top Left
         ];
 
         let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];

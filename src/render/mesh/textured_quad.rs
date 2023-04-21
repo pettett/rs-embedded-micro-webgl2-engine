@@ -2,6 +2,7 @@ use crate::app::State;
 //use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::render::rgl::shader::Shader;
 use crate::render::rgl::shader::ShaderKind;
+use crate::render::rgl::texture::TexUnit;
 use crate::render::rgl::uniform_buffer::UniformBuffer;
 use crate::render::Render;
 use crate::render::{BufferedMesh, CameraData};
@@ -19,7 +20,7 @@ pub struct TexturedQuad {
     /// How many pixels tall
     height: u16,
     /// The texture unit to use
-    texture_unit: u8,
+    texture_unit: TexUnit,
     /// The shader to use when rendering
     shader: Rc<Shader>,
 }
@@ -30,7 +31,7 @@ impl TexturedQuad {
         top: u16,
         width: u16,
         height: u16,
-        texture_unit: u8,
+        texture_unit: TexUnit,
         shader: Rc<Shader>,
     ) -> TexturedQuad {
         TexturedQuad {
@@ -71,13 +72,22 @@ impl<'a> Render<'a> for TexturedQuad {
         gl: &WebGl2RenderingContext,
         _: &BufferedMesh,
         camera: &UniformBuffer<CameraData>,
-        _state: &State,
+        state: &State,
     ) {
         let shader = self.shader();
 
         gl.uniform1i(
             shader.get_uniform_location(gl, "u_texture").as_ref(),
-            self.texture_unit as i32,
+            self.texture_unit.unit() as i32,
+        );
+
+        gl.uniform1f(
+            shader.get_uniform_location(gl, "x").as_ref(),
+            self.left as f32 / state.width as f32,
+        );
+        gl.uniform1f(
+            shader.get_uniform_location(gl, "y").as_ref(),
+            self.top as f32 / state.height as f32,
         );
 
         gl.draw_arrays(GL::TRIANGLES, 0, 6);
@@ -90,10 +100,10 @@ impl TexturedQuad {
         let viewport_width = viewport_width as f32;
         let viewport_height = viewport_height as f32;
 
-        let left_x = self.left as f32 / viewport_width;
-        let top_y = self.top as f32 / viewport_height;
-        let right_x = (self.left as f32 + self.width as f32) / viewport_width;
-        let bottom_y = (self.top as f32 - self.height as f32) / viewport_height;
+        let left_x = 0. / viewport_width;
+        let top_y = 0. / viewport_height;
+        let right_x = (0. + self.width as f32) / viewport_width;
+        let bottom_y = (0. - self.height as f32) / viewport_height;
 
         let left_x = 2.0 * left_x - 1.0;
         let right_x = 2.0 * right_x - 1.0;
@@ -104,20 +114,20 @@ impl TexturedQuad {
         // All of the positions of our quad in screen space
         let positions = [
             left_x, top_y, // Top Left
-            right_x, bottom_y, // Bottom Right
             left_x, bottom_y, // Bottom Left
-            left_x, top_y, // Top Left
-            right_x, top_y, // Top Right
             right_x, bottom_y, // Bottom Right
+            left_x, top_y, // Top Left
+            right_x, bottom_y, // Bottom Right
+            right_x, top_y, // Top Right
         ];
 
         let texture_coords = [
             0., 1., // Top left
-            1., 0., // Bottom Right
             0., 0., // Bottom Left
-            0., 1., // Top Left
-            1., 1., // Top Right
             1., 0., // Bottom Right
+            0., 1., // Top Left
+            1., 0., // Bottom Right
+            1., 1., // Top Right
         ];
 
         let mut vertices = vec![];

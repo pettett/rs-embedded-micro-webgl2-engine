@@ -38,6 +38,7 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
 
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
         let normal_attrib = gl.get_attrib_location(&shader.program, "normal");
+        let tangent_attrib = gl.get_attrib_location(&shader.program, "tangent");
         let uv_attrib = gl.get_attrib_location(&shader.program, "uvs");
 
         let reader = mesh.reader(|buffer| Some(&self.buffers[buffer.index()]));
@@ -53,6 +54,14 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
 
             gl.enable_vertex_attrib_array(normal_attrib as u32);
             NonSkinnedGltfMesh::buffer_sf32_data(&gl, &norms[..], normal_attrib as u32);
+        }
+
+        if let Some(iter) = reader.read_tangents() {
+            let tangents: Vec<[f32; 4]> = iter.collect();
+            // W is bi-tangent sign. bitangent = cross(normal, tangent.xyz) * tangent.w
+
+            gl.enable_vertex_attrib_array(tangent_attrib as u32);
+            NonSkinnedGltfMesh::buffer_sf32_data(&gl, &tangents[..], tangent_attrib as u32);
         }
 
         if let Some(ReadTexCoords::F32(iter)) = reader.read_tex_coords(0) {
