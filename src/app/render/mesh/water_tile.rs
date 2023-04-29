@@ -62,7 +62,7 @@ impl Render for Water {
 
         let model = Isometry3::new(Vector3::new(pos.0, pos.1, pos.2), nalgebra::zero());
         let model = model.to_homogeneous();
-        let model = scale * model;
+        let model = model * scale;
         let mut model_array = [0.; 16];
         model_array.copy_from_slice(model.as_slice());
         gl.uniform_matrix4fv_with_f32_array(model_uni.as_ref(), false, &mut model_array);

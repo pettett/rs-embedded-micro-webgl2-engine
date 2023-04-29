@@ -37,26 +37,11 @@ impl WebRenderer {
         if !state.show_scenery() {
             return;
         }
-        let non_skinned_shader = self
-            .shader_sys
-            .get_shader(&ShaderKind::NonSkinnedMesh)
-            .unwrap();
-
-        self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
 
         for entity in &state.entities {
             let e = entity.borrow();
             if e.should_render(&stage) {
-                e.render(
-                    gl,
-                    non_skinned_shader,
-                    &self,
-                    camera,
-                    clip_plane.clone(),
-                    stage,
-                    state,
-                    assets,
-                );
+                e.render(gl, &self, camera, clip_plane.clone(), stage, state, assets);
             }
         }
 

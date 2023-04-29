@@ -14,8 +14,8 @@ use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
 pub struct Cube {
-    pos: Vector3<f32>,
-    extents: Vector3<f32>,
+    pub pos: Vector3<f32>,
+    pub extents: Vector3<f32>,
 }
 
 impl Cube {

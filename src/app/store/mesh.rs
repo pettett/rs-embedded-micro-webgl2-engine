@@ -46,7 +46,6 @@ impl Entity for Mesh {
     fn render(
         &self,
         gl: &WebGl2RenderingContext,
-        shader: &Shader,
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         clip_plane: [f32; 4],
@@ -155,18 +154,20 @@ impl Entity for Mesh {
                 }
             }
         }
-        let wireframe_shader = renderer
-            .shader_sys
-            .get_shader(&ShaderKind::WireFrame)
-            .unwrap();
+        if stage == RenderStage::Opaques {
+            let wireframe_shader = renderer
+                .shader_sys
+                .get_shader(&ShaderKind::WireFrame)
+                .unwrap();
 
-        renderer.shader_sys.use_program(gl, ShaderKind::WireFrame);
-        for (pos, extents) in gizmos {
-            let b = Cube::new(pos, extents);
-            //    log::info!("Gizmo at p: {} e: {}", pos, extents);
-            let buff = renderer.prepare_for_render(gl, &b, wireframe_shader, "gizmo", state);
+            renderer.shader_sys.use_program(gl, ShaderKind::WireFrame);
+            for (pos, extents) in gizmos {
+                let b = Cube::new(pos, extents);
+                //    log::info!("Gizmo at p: {} e: {}", pos, extents);
+                let buff = renderer.prepare_for_render(gl, &b, wireframe_shader, "gizmo", state);
 
-            b.render(gl, &buff, wireframe_shader, renderer, camera, state)
+                b.render(gl, &buff, wireframe_shader, renderer, camera, state)
+            }
         }
     }
 

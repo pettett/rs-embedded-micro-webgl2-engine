@@ -126,32 +126,6 @@ impl WebRenderer {
         // Position is positive instead of negative for.. mathematical reasons..
         let clip_plane = [0., 1., 0., above];
 
-        // if let Some(w) = &water {
-        //     if w.use_reflection {
-        //         let flipped_y_camera = CameraData {
-        //             view: state.camera().view_flipped_y_mat(),
-        //             projection: camera.projection.clone(),
-        //             pos: camera.pos.clone(),
-        //         };
-
-        //         self.flipped_y_camera_buffer.buffer(gl, &flipped_y_camera);
-        //     }
-
-        //     self.render_refraction_fbo(gl, w, &self.camera_buffer, state, assets);
-        //     self.render_reflection_fbo(gl, w, &self.flipped_y_camera_buffer, state, assets);
-        //     gl.viewport(
-        //         0,
-        //         0,
-        //         state.display.width as i32,
-        //         state.display.height as i32,
-        //     );
-        //     gl.bind_framebuffer(GL::FRAMEBUFFER, None);
-        // }
-
-        // if let Some(w) = water {
-        //     self.render_water(gl, w, &self.camera_buffer, state, assets);
-        // }
-
         self.render_entities(
             gl,
             state,
@@ -180,36 +154,6 @@ impl WebRenderer {
         }
     }
 
-    fn render_water(
-        &self,
-        gl: &WebGl2RenderingContext,
-        water: &Water,
-        camera: &UniformBuffer<CameraData>,
-        state: &State,
-        assets: &Assets,
-    ) {
-        // let water_shader = self.shader_sys.get_shader(&ShaderKind::Water).unwrap();
-        // self.shader_sys.use_program(gl, ShaderKind::Water);
-
-        // let water_material = MatWater {
-        //     shader: water_shader.clone(),
-        //     dudv: assets.get_tex(water.dudv),
-        //     normal_map: assets.get_tex(water.normal),
-        //     refraction: self.refraction_framebuffer.clone(),
-        //     reflection: self.reflection_framebuffer.clone(),
-        //     reflectivity: water.reflectivity,
-        //     fresnel_strength: water.fresnel_strength,
-        //     wave_speed: water.wave_speed,
-        //     use_refraction: water.use_refraction,
-        //     use_reflection: water.use_refraction,
-        // };
-
-        // let b = self.prepare_for_render(gl, water, water_shader, "water", state);
-
-        // water_material.bind_uniforms(gl, camera, state);
-        // water.render(gl, &b, water_shader, &self, camera, state);
-    }
-
     pub fn render_refraction_fbo(
         &self,
         gl: &WebGl2RenderingContext,
@@ -217,6 +161,7 @@ impl WebRenderer {
         camera: &UniformBuffer<CameraData>,
         state: &State,
         assets: &Assets,
+        water_tile_y: f32,
     ) {
         if water.use_refraction {
             let framebuffer = &self.refraction_framebuffer.framebuffer;
@@ -227,7 +172,7 @@ impl WebRenderer {
             gl.clear_color(0.53, 0.8, 0.98, 1.);
             gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
-            let clip_plane = [0., -1., 0., WATER_TILE_Y_POS];
+            let clip_plane = [0., -1., 0., water_tile_y];
             self.render_entities(
                 gl,
                 state,
@@ -246,6 +191,7 @@ impl WebRenderer {
         camera: &UniformBuffer<CameraData>,
         state: &State,
         assets: &Assets,
+        water_tile_y: f32,
     ) {
         if water.use_reflection {
             let framebuffer = &self.reflection_framebuffer.framebuffer;
@@ -256,7 +202,7 @@ impl WebRenderer {
             gl.clear_color(0.53, 0.8, 0.98, 1.);
             gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
-            let clip_plane = [0., 1., 0., -WATER_TILE_Y_POS];
+            let clip_plane = [0., 1., 0., -water_tile_y];
             self.render_entities(
                 gl,
                 state,

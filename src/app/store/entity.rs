@@ -17,7 +17,6 @@ pub trait Entity {
     fn render(
         &self,
         gl: &GL,
-        shader: &Shader,
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         clip_plane: [f32; 4],

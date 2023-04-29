@@ -1,4 +1,12 @@
-let data= [ ];
+let data= [#{
+	type:"water",
+	reflectivity: 0.5,
+	fresnel_strength: 1.5,
+	wave_speed: 0.06,
+	use_reflection: true,
+	use_refraction: true,
+}
+];
 
 fn make_white(mesh, pos){
     return #{

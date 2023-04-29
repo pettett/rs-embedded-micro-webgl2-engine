@@ -1,12 +1,13 @@
 use crate::app::render::{
     material::{MatWater, Material},
+    mesh::cube::Cube,
     render_trait::Render,
     rgl::shader::ShaderKind,
     CameraData, RenderStage,
 };
 
 use super::entity::Entity;
-use nalgebra::Point4;
+use nalgebra::{Point4, Vector3};
 use web_sys::WebGl2RenderingContext as GL;
 #[derive(Debug, Clone)]
 pub struct Water {
@@ -28,7 +29,6 @@ impl Entity for Water {
     fn render(
         &self,
         gl: &GL,
-        shader: &crate::app::render::rgl::shader::Shader,
         renderer: &crate::app::render::WebRenderer,
         camera: &crate::app::render::rgl::uniform_buffer::UniformBuffer<
             crate::app::render::CameraData,
@@ -38,6 +38,8 @@ impl Entity for Water {
         state: &super::State,
         assets: &crate::app::Assets,
     ) {
+        let water_tile_y = 5.0;
+
         if self.use_reflection {
             let p = state.camera().get_eye_pos();
             let flipped_y_camera = CameraData {
@@ -55,10 +57,18 @@ impl Entity for Water {
                 &renderer.flipped_y_camera_buffer,
                 state,
                 assets,
+                water_tile_y,
             );
         }
         if self.use_refraction {
-            renderer.render_refraction_fbo(gl, self, &renderer.camera_buffer, state, assets);
+            renderer.render_refraction_fbo(
+                gl,
+                self,
+                &renderer.camera_buffer,
+                state,
+                assets,
+                water_tile_y,
+            );
         }
 
         if self.use_reflection || self.use_refraction {
@@ -86,12 +96,12 @@ impl Entity for Water {
             use_refraction: self.use_refraction,
             use_reflection: self.use_refraction,
         };
-        let b = renderer.prepare_for_render(gl, self, water_shader, "water", state);
 
         water_material.bind_uniforms(gl, camera, state);
 
         //log::info!("Rendering Water");
+        let b = renderer.prepare_for_render(gl, self, water_shader, "water", state);
 
-        <dyn Render>::render(self, gl, &b, shader, renderer, camera, state);
+        <dyn Render>::render(self, gl, &b, water_shader, renderer, camera, state);
     }
 }
