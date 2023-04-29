@@ -38,7 +38,7 @@ impl Entity for Water {
         state: &super::State,
         assets: &crate::app::Assets,
     ) {
-        let water_tile_y = 5.0;
+        let water_tile_y = 0.0;
 
         if self.use_reflection {
             let p = state.camera().get_eye_pos();
