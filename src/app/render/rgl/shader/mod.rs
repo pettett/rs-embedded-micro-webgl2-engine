@@ -15,6 +15,9 @@ static MESH_NON_SKINNED_FS: &'static str = include_str!("./mesh-non-skinned-frag
 static WATER_VS: &'static str = include_str!("./water-vertex.glsl");
 static WATER_FS: &'static str = include_str!("./water-fragment.glsl");
 
+static WIREFRAME_VS: &'static str = include_str!("./wireframe-vertex.glsl");
+static WIREFRAME_FS: &'static str = include_str!("./wireframe-fragment.glsl");
+
 /// Powers retrieving and using our shaders
 pub struct ShaderSystem {
     programs: HashMap<ShaderKind, std::rc::Rc<Shader>>,
@@ -31,6 +34,7 @@ impl ShaderSystem {
             Shader::new(&gl, MESH_NON_SKINNED_VS, MESH_NON_SKINNED_FS).unwrap();
         //let skinned_mesh_shader = Shader::new(&gl, MESH_SKINNED_VS, MESH_SKINNED_FS).unwrap();
         let textured_quad_shader = Shader::new(&gl, TEXTURED_QUAD_VS, TEXTURED_QUAD_FS).unwrap();
+        let wireframe_shader = Shader::new(&gl, WIREFRAME_VS, WIREFRAME_FS).unwrap();
 
         let active_program = RefCell::new(ShaderKind::TexturedQuad);
         gl.use_program(Some(&textured_quad_shader.program));
@@ -39,6 +43,7 @@ impl ShaderSystem {
         programs.insert(ShaderKind::NonSkinnedMesh, Rc::new(non_skinned_shader));
         //programs.insert(ShaderKind::SkinnedMesh, skinned_mesh_shader);
         programs.insert(ShaderKind::TexturedQuad, Rc::new(textured_quad_shader));
+        programs.insert(ShaderKind::WireFrame, Rc::new(wireframe_shader));
 
         ShaderSystem {
             programs,
@@ -68,6 +73,7 @@ impl ShaderSystem {
 pub enum ShaderKind {
     Water,
     NonSkinnedMesh,
+    WireFrame,
     SkinnedMesh,
     TexturedQuad,
 }

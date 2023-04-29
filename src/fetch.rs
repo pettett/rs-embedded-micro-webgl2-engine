@@ -1,5 +1,5 @@
+use crate::app::render::rgl::texture::Tex;
 use crate::app::Assets;
-use crate::render::rgl::texture::Tex;
 use js_sys::Uint8Array;
 use std::cell::RefCell;
 use std::rc::Rc;

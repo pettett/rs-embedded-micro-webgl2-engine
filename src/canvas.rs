@@ -65,8 +65,8 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
     canvas.set_height(display_height);
 
     let mut store = app.store.borrow_mut();
-    store.state.width = display_width;
-    store.state.height = display_height;
+    store.state.display.width = display_width;
+    store.state.display.height = display_height;
     store
         .state
         .camera_mut()

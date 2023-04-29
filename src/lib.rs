@@ -14,7 +14,7 @@
 //! Heavily inspired by this @thinmatrix tutorial:
 //!   - https://www.youtube.com/watch?v=HusvGeEDU_U&list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
 
-#![deny(missing_docs)]
+// #![deny(missing_docs)]
 extern crate num;
 #[macro_use]
 extern crate num_derive;
@@ -27,7 +27,6 @@ use app::keyboard::KeyCode;
 use console_error_panic_hook;
 use gltf::image::Source;
 use gltf::Material;
-use render::material::MatAlbedo;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -37,7 +36,6 @@ use crate::num::FromPrimitive;
 mod app;
 mod canvas;
 mod fetch;
-mod render;
 
 /// Used to run the application from the web
 #[wasm_bindgen]
@@ -78,15 +76,16 @@ impl WebClient {
 
         match self.app.control.try_borrow_mut() {
             Ok(mut c) => {
-                for e in &mut store.state.entities {
-                    if let Entity::EntMesh(m) = &**e {
-                        let f = { m.borrow().update.as_ref().map(|f| f.clone()) };
+                //TODO: fix updates
+                // for e in &mut store.state.entities {
+                //     if let Entity::EntMesh(m) = &**e {
+                //         let f = { m.borrow().update.as_ref().map(|f| f.clone()) };
 
-                        if let Some(f) = f {
-                            c.run_func(&f, m.clone());
-                        }
-                    }
-                }
+                //         if let Some(f) = f {
+                //             c.run_func(&f, m.clone());
+                //         }
+                //     }
+                // }
             }
             Err(_) => (),
         }

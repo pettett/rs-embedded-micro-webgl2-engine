@@ -1,4 +1,5 @@
-mod gltf_mesh;
+pub mod cube;
+pub mod gltf_mesh;
 // mod non_skinned_mesh;
 // mod skinned_mesh;
 

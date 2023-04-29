@@ -1,40 +1,23 @@
+use crate::app::render::buffer_f32_data;
+use crate::app::render::buffer_u16_indices;
+use crate::app::render::rgl::shader::Shader;
+use crate::app::render::rgl::shader::ShaderKind;
+use crate::app::render::rgl::uniform_buffer::UniformBuffer;
+use crate::app::render::BufferedMesh;
+use crate::app::render::CameraData;
+use crate::app::render::Render;
+use crate::app::render::WebRenderer;
 use crate::app::store::water::Water;
+use crate::app::Assets;
 use crate::app::State;
-use crate::render::rgl::shader::Shader;
-use crate::render::rgl::shader::ShaderKind;
-use crate::render::rgl::uniform_buffer::UniformBuffer;
-use crate::render::BufferedMesh;
-use crate::render::CameraData;
-use crate::render::Render;
 use nalgebra;
 use nalgebra::{Isometry3, Matrix4, Vector3};
 use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
-pub struct RenderableWaterTile<'a> {
-    shader: Rc<Shader>,
-    water: &'a Water,
-}
-
-impl<'a> RenderableWaterTile<'a> {
-    pub fn new(shader: Rc<Shader>, water: &'a Water) -> RenderableWaterTile<'a> {
-        RenderableWaterTile { shader, water }
-    }
-}
-
-impl<'a> Render<'a> for RenderableWaterTile<'a> {
-    fn shader_kind() -> ShaderKind {
-        ShaderKind::Water
-    }
-
-    fn shader(&'a self) -> Rc<Shader> {
-        self.shader.clone()
-    }
-
-    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
-        let shader = self.shader();
-
+impl Render for Water {
+    fn buffer_attributes(&self, gl: &GL, shader: &Shader, state: &State) -> BufferedMesh {
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
         gl.enable_vertex_attrib_array(pos_attrib as u32);
 
@@ -50,8 +33,8 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
 
         let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
-        RenderableWaterTile::buffer_f32_data(&gl, &vertices, pos_attrib as u32, 2);
-        RenderableWaterTile::buffer_u16_indices(&gl, &mut indices);
+        buffer_f32_data(&gl, &vertices, pos_attrib as u32, 2);
+        buffer_u16_indices(&gl, &mut indices);
 
         BufferedMesh {
             tri_size: GL::UNSIGNED_SHORT,
@@ -62,11 +45,12 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         &self,
         gl: &WebGl2RenderingContext,
         buffer: &BufferedMesh,
+        shader: &Shader,
+        renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
+        assets: &Assets,
     ) {
-        let shader = self.shader();
-
         let model_uni = shader.get_uniform_location(gl, "model");
 
         let pos = (0., 0.0, 0.);
@@ -88,5 +72,9 @@ impl<'a> Render<'a> for RenderableWaterTile<'a> {
         gl.draw_elements_with_i32(GL::TRIANGLES, 6, buffer.tri_size, 0);
 
         gl.disable(GL::BLEND);
+    }
+
+    fn render_in_water(&self) -> bool {
+        false
     }
 }

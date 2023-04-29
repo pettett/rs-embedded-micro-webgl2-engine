@@ -10,8 +10,8 @@ pub static REFRACTION_TEXTURE_HEIGHT: i32 = 512;
 
 use std::collections::HashMap;
 
-use crate::render::TextureUnit;
-use crate::render::WebRenderer;
+use crate::app::render::TextureUnit;
+use crate::app::render::WebRenderer;
 use wasm_bindgen::JsValue;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
@@ -83,7 +83,7 @@ impl<'a> FramebufferBind<'a> {
 }
 
 impl WebRenderer {
-    pub(in crate::render) fn create_refraction_framebuffer(
+    pub(in crate::app::render) fn create_refraction_framebuffer(
         gl: &WebGl2RenderingContext,
     ) -> Result<Framebuffer, JsValue> {
         let mut framebuffer = Framebuffer::new(gl);
@@ -113,7 +113,7 @@ impl WebRenderer {
         Ok(framebuffer)
     }
 
-    pub(in crate::render) fn create_reflection_framebuffer(
+    pub(in crate::app::render) fn create_reflection_framebuffer(
         gl: &WebGl2RenderingContext,
     ) -> Result<Framebuffer, JsValue> {
         let mut framebuffer = Framebuffer::new(gl);

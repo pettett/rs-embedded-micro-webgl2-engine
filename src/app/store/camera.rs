@@ -1,7 +1,12 @@
 use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
 use std::f32::consts::PI;
 
-use super::keyboard::{KeyCode, Keyboard};
+use crate::ray::Ray;
+
+use super::{
+    keyboard::{KeyCode, Keyboard},
+    mouse::Mouse,
+};
 
 pub struct Camera {
     projection: Perspective3<f32>,
@@ -110,6 +115,11 @@ impl Camera {
 
         Point3::new(eye_x + self.pos_x, eye_y, eye_z + self.pos_z)
     }
+
+    pub fn get_mouse_ray(&self, mouse: &Mouse) -> Ray {
+        Ray::forward().transform(&self.view_mat())
+    }
+
     pub fn projection(&self) -> [f32; 16] {
         let mut perspective_array = [0.; 16];
         perspective_array.copy_from_slice(self.projection.as_matrix().as_slice());

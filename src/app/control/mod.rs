@@ -4,6 +4,9 @@ use rhai::{Dynamic, Engine, ParseError, Scope, AST};
 
 pub mod from_rhai;
 mod mesh_from_rhai;
+
+use crate::app::render::render_trait::Render;
+
 use self::from_rhai::FromRhai;
 
 use super::{store::Mesh, Assets, LuaMsg, Store};
@@ -156,11 +159,12 @@ impl Control {
         for dyn_entity in data {
             let entity = dyn_entity.cast::<rhai::Map>();
 
-            let e = match entity["type"].clone().into_string()?.as_str() {
+            match entity["type"].clone().into_string()?.as_str() {
                 "mesh" => {
                     let m = super::Mesh::try_from_rhai(entity, &mut assets.borrow_mut()).unwrap();
 
-                    super::Entity::EntMesh(Rc::new(RefCell::new(m)))
+                    let e: Rc<RefCell<Box<dyn Render>>> = Rc::new(RefCell::new(Box::new(m)));
+                    state.borrow_mut().state.entities.push(e)
                 }
                 "water" => {
                     let d = assets
@@ -170,21 +174,21 @@ impl Control {
                         .borrow_mut()
                         .require_texture("assets/textures/normalmap.png".to_owned());
 
-                    super::Entity::EntWater(crate::app::store::water::Water {
-                        dudv: d,
-                        normal: n,
-                        reflectivity: f32_or(&entity, "reflectivity", 0.5),
-                        fresnel_strength: f32_or(&entity, "fresnel", 0.5),
-                        wave_speed: f32_or(&entity, "wave_speed", 0.5),
-                        use_refraction: bool_or(&entity, "use_refraction", true),
-                        use_reflection: bool_or(&entity, "use_reflection", true),
-                    })
+                    let e: Rc<RefCell<Box<dyn Render>>> =
+                        Rc::new(RefCell::new(Box::new(crate::app::store::water::Water {
+                            dudv: d,
+                            normal: n,
+                            reflectivity: f32_or(&entity, "reflectivity", 0.5),
+                            fresnel_strength: f32_or(&entity, "fresnel", 0.5),
+                            wave_speed: f32_or(&entity, "wave_speed", 0.5),
+                            use_refraction: bool_or(&entity, "use_refraction", true),
+                            use_reflection: bool_or(&entity, "use_reflection", true),
+                        })));
+                    state.borrow_mut().state.entities.push(e)
                 }
                 _ => return Err("Unknown Entity Type"),
             };
             //log::info!("{:?}", e);
-
-            state.borrow_mut().state.entities.push(Box::new(e))
         }
 
         //log::info!("{:?}", state.borrow_mut().state.entities);

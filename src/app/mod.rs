@@ -2,6 +2,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 mod control;
+pub mod ray;
+pub mod render;
 pub use self::control::*;
 
 pub mod store;

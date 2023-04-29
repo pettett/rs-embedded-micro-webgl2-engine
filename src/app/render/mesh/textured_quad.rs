@@ -1,11 +1,14 @@
+use crate::app::render::buffer_f32_data;
+use crate::app::render::WebRenderer;
+use crate::app::Assets;
 use crate::app::State;
 //use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
-use crate::render::rgl::shader::Shader;
-use crate::render::rgl::shader::ShaderKind;
-use crate::render::rgl::texture::TexUnit;
-use crate::render::rgl::uniform_buffer::UniformBuffer;
-use crate::render::Render;
-use crate::render::{BufferedMesh, CameraData};
+use crate::app::render::rgl::shader::Shader;
+use crate::app::render::rgl::shader::ShaderKind;
+use crate::app::render::rgl::texture::TexUnit;
+use crate::app::render::rgl::uniform_buffer::UniformBuffer;
+use crate::app::render::Render;
+use crate::app::render::{BufferedMesh, CameraData};
 use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
@@ -21,8 +24,6 @@ pub struct TexturedQuad {
     height: u16,
     /// The texture unit to use
     texture_unit: TexUnit,
-    /// The shader to use when rendering
-    shader: Rc<Shader>,
 }
 
 impl TexturedQuad {
@@ -40,29 +41,19 @@ impl TexturedQuad {
             width,
             height,
             texture_unit,
-            shader,
         }
     }
 }
 
-impl<'a> Render<'a> for TexturedQuad {
-    fn shader_kind() -> ShaderKind {
-        ShaderKind::TexturedQuad
-    }
-
-    fn shader(&'a self) -> Rc<Shader> {
-        self.shader.clone()
-    }
-
-    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
-        let shader = self.shader();
-
-        let vertex_data = self.make_textured_quad_vertices(state.width, state.height);
+impl Render for TexturedQuad {
+    fn buffer_attributes(&self, gl: &GL, shader: &Shader, state: &State) -> BufferedMesh {
+        let vertex_data =
+            self.make_textured_quad_vertices(state.display.width, state.display.height);
 
         let vertex_data_attrib = gl.get_attrib_location(&shader.program, "vertexData");
         gl.enable_vertex_attrib_array(vertex_data_attrib as u32);
 
-        TexturedQuad::buffer_f32_data(&gl, &vertex_data[..], vertex_data_attrib as u32, 4);
+        buffer_f32_data(&gl, &vertex_data[..], vertex_data_attrib as u32, 4);
 
         BufferedMesh { tri_size: 0 }
     }
@@ -71,11 +62,12 @@ impl<'a> Render<'a> for TexturedQuad {
         &self,
         gl: &WebGl2RenderingContext,
         _: &BufferedMesh,
+        shader: &Shader,
+        renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
+        assets: &Assets,
     ) {
-        let shader = self.shader();
-
         gl.uniform1i(
             shader.get_uniform_location(gl, "u_texture").as_ref(),
             self.texture_unit.unit() as i32,
@@ -83,14 +75,18 @@ impl<'a> Render<'a> for TexturedQuad {
 
         gl.uniform1f(
             shader.get_uniform_location(gl, "x").as_ref(),
-            self.left as f32 / state.width as f32,
+            self.left as f32 / state.display.width as f32,
         );
         gl.uniform1f(
             shader.get_uniform_location(gl, "y").as_ref(),
-            self.top as f32 / state.height as f32,
+            self.top as f32 / state.display.height as f32,
         );
 
         gl.draw_arrays(GL::TRIANGLES, 0, 6);
+    }
+
+    fn render_in_water(&self) -> bool {
+        false
     }
 }
 

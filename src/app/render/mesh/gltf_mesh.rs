@@ -1,39 +1,32 @@
 use super::MeshRenderOpts;
+use crate::app::render::buffer_sf32_data;
+use crate::app::render::buffer_u16_indices;
+use crate::app::render::buffer_u32_indices;
+use crate::app::render::rgl::shader::Shader;
+use crate::app::render::rgl::uniform_buffer::UniformBuffer;
+use crate::app::render::BufferedMesh;
+use crate::app::render::CameraData;
+use crate::app::render::Render;
+use crate::app::render::WebRenderer;
+use crate::app::Assets;
 use crate::app::State;
-use crate::render::rgl::shader::Shader;
-use crate::render::rgl::shader::ShaderKind;
-use crate::render::rgl::uniform_buffer::UniformBuffer;
-use crate::render::BufferedMesh;
-use crate::render::CameraData;
-use crate::render::Render;
 use gltf::mesh::util::ReadIndices;
 use gltf::mesh::util::ReadTexCoords;
 use gltf::{buffer::Data, Primitive};
 use nalgebra;
 use nalgebra::Isometry3;
 use nalgebra::Scale3;
-use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 
 pub struct NonSkinnedGltfMesh<'a> {
     pub mesh: &'a Primitive<'a>,
     pub buffers: &'a Vec<Data>,
-    pub shader: Rc<Shader>,
     pub opts: &'a MeshRenderOpts,
 }
 
-impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
-    fn shader_kind() -> ShaderKind {
-        ShaderKind::NonSkinnedMesh
-    }
-
-    fn shader(&self) -> Rc<Shader> {
-        self.shader.clone()
-    }
-
-    fn buffer_attributes(&self, gl: &GL, state: &State) -> BufferedMesh {
-        let shader = self.shader();
+impl<'a> Render for NonSkinnedGltfMesh<'a> {
+    fn buffer_attributes(&self, gl: &GL, shader: &Shader, state: &State) -> BufferedMesh {
         let mesh: &gltf::Primitive<'a> = self.mesh;
 
         let pos_attrib = gl.get_attrib_location(&shader.program, "position");
@@ -46,14 +39,14 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
             let verts: Vec<[f32; 3]> = iter.collect();
 
             gl.enable_vertex_attrib_array(pos_attrib as u32);
-            NonSkinnedGltfMesh::buffer_sf32_data(&gl, &verts[..], pos_attrib as u32);
+            buffer_sf32_data(&gl, &verts[..], pos_attrib as u32);
         }
 
         if let Some(iter) = reader.read_normals() {
             let norms: Vec<[f32; 3]> = iter.collect();
 
             gl.enable_vertex_attrib_array(normal_attrib as u32);
-            NonSkinnedGltfMesh::buffer_sf32_data(&gl, &norms[..], normal_attrib as u32);
+            buffer_sf32_data(&gl, &norms[..], normal_attrib as u32);
         }
 
         if let Some(iter) = reader.read_tangents() {
@@ -61,7 +54,9 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
             // W is bi-tangent sign. bitangent = cross(normal, tangent.xyz) * tangent.w
 
             gl.enable_vertex_attrib_array(tangent_attrib as u32);
-            NonSkinnedGltfMesh::buffer_sf32_data(&gl, &tangents[..], tangent_attrib as u32);
+            buffer_sf32_data(&gl, &tangents[..], tangent_attrib as u32);
+        } else {
+            log::warn!("Primitive {} has no tangent data", mesh.index());
         }
 
         if let Some(ReadTexCoords::F32(iter)) = reader.read_tex_coords(0) {
@@ -69,7 +64,7 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
 
             gl.enable_vertex_attrib_array(uv_attrib as u32);
 
-            NonSkinnedGltfMesh::buffer_sf32_data(&gl, &uvs[..], uv_attrib as u32);
+            buffer_sf32_data(&gl, &uvs[..], uv_attrib as u32);
         }
 
         //
@@ -78,7 +73,7 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
             Some(ReadIndices::U16(iter)) => {
                 let indicies: Vec<u16> = iter.collect();
 
-                NonSkinnedGltfMesh::buffer_u16_indices(&gl, &indicies[..]);
+                buffer_u16_indices(&gl, &indicies[..]);
 
                 BufferedMesh {
                     tri_size: GL::UNSIGNED_SHORT,
@@ -88,7 +83,7 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
                 let indicies: Vec<u32> = iter.collect();
 
                 if let Some(_) = gl.get_extension("OES_element_index_uint").unwrap() {
-                    NonSkinnedGltfMesh::buffer_u32_indices(&gl, &indicies[..]);
+                    buffer_u32_indices(&gl, &indicies[..]);
 
                     BufferedMesh {
                         tri_size: GL::UNSIGNED_INT,
@@ -105,11 +100,12 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
         &self,
         gl: &WebGl2RenderingContext,
         buffer: &BufferedMesh,
+        shader: &Shader,
+        renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
+        assets: &Assets,
     ) {
-        let shader = self.shader();
-
         let mesh = self.mesh;
         let opts = self.opts;
 
@@ -138,5 +134,9 @@ impl<'a> Render<'a> for NonSkinnedGltfMesh<'a> {
             buffer.tri_size,
             0,
         );
+    }
+
+    fn render_in_water(&self) -> bool {
+        true
     }
 }

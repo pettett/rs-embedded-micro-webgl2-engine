@@ -1,17 +1,22 @@
+pub mod display;
 pub mod keyboard;
+pub mod mesh;
 mod mouse;
 
 use nalgebra::Vector3;
 
+use crate::app::render::render_trait::Render;
+
+use self::display::Display;
 use self::keyboard::KeyCode;
 use self::keyboard::Keyboard;
 use self::mouse::*;
 
 mod camera;
 use self::camera::*;
+pub use self::mesh::Mesh;
 
 pub mod water;
-use self::water::*;
 
 use super::Mat;
 
@@ -36,30 +41,12 @@ pub struct State {
     clock: f32,
     next_log: f32,
     dt_rolling: f32,
-    pub width: u32,
-    pub height: u32,
+    pub display: super::display::Display,
     camera: Camera,
     keyboard: Keyboard,
     mouse: Mouse,
     show_scenery: bool,
-    pub entities: Vec<Box<Entity>>,
-}
-
-#[derive(Debug, Clone)]
-pub enum Entity {
-    EntMesh(std::rc::Rc<std::cell::RefCell<Mesh>>),
-    EntWater(Water),
-}
-
-#[derive(Debug, Clone)]
-pub struct Mesh {
-    pub mesh: usize,
-    pub mat: Mat,
-
-    pub position: Vector3<f32>,
-    pub scale: Vector3<f32>,
-    pub rotation: Vector3<f32>,
-    pub update: Option<String>,
+    pub entities: Vec<std::rc::Rc<std::cell::RefCell<Box<dyn Render>>>>,
 }
 
 impl State {
@@ -72,8 +59,10 @@ impl State {
             camera: Camera::new(),
             keyboard: Keyboard::default(),
             mouse: Mouse::default(),
-            width: 1,
-            height: 1,
+            display: Display {
+                width: 1,
+                height: 1,
+            },
             show_scenery: true,
             entities: vec![],
         }

@@ -1,9 +1,6 @@
-use crate::render::{
-    rgl::{
-        shader::Shader,
-        texture::{Tex, TexUnit},
-    },
-    TextureUnit,
+use crate::app::render::rgl::{
+    shader::Shader,
+    texture::{Tex, TexUnit},
 };
 
 use super::Material;
@@ -18,7 +15,9 @@ impl Material for MatAlbedo {
     fn bind_uniforms(
         &self,
         gl: &web_sys::WebGl2RenderingContext,
-        camera: &crate::render::rgl::uniform_buffer::UniformBuffer<crate::render::CameraData>,
+        camera: &crate::app::render::rgl::uniform_buffer::UniformBuffer<
+            crate::app::render::CameraData,
+        >,
         state: &crate::app::store::State,
     ) {
         let mesh_texture_uni = self.shader.get_uniform_location(gl, "meshTexture");

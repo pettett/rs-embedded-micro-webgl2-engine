@@ -43,13 +43,7 @@ impl<T: Sized> UniformBuffer<T> {
         gl.buffer_sub_data_with_i32_and_array_buffer_view(GL::UNIFORM_BUFFER, 0, &data_array);
     }
     /// Bind uniform buffer for use in shaders
-    pub fn bind_base(
-        &self,
-        gl: &GL,
-        shader: &std::rc::Rc<Shader>,
-        block_index: u32,
-        binding_point: u32,
-    ) {
+    pub fn bind_base(&self, gl: &GL, shader: &Shader, block_index: u32, binding_point: u32) {
         gl.bind_buffer_base(GL::UNIFORM_BUFFER, binding_point, self.buffer.as_ref());
         gl.uniform_block_binding(&shader.program, block_index, binding_point);
     }

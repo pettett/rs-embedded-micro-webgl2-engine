@@ -6,12 +6,7 @@ use gltf::{
 use std::collections::{HashMap, HashSet};
 use web_sys::WebGl2RenderingContext;
 
-use crate::{
-    fetch,
-    render::{material::MatAlbedo, rgl::texture::Tex},
-};
-
-use super::store::Store;
+use crate::{fetch, render::rgl::texture::Tex};
 
 pub struct GltfMesh {
     pub doc: Document,

@@ -1,0 +1,182 @@
+use crate::app::render::material::MatAlbedo;
+use crate::app::render::material::Material;
+use crate::app::render::mesh::cube::Cube;
+use crate::app::render::mesh::MeshRenderOpts;
+use crate::app::render::mesh::NonSkinnedGltfMesh;
+use crate::app::render::render_trait::BufferedMesh;
+use crate::app::render::render_trait::Render;
+use crate::app::render::rgl::shader::Shader;
+use crate::app::render::rgl::shader::ShaderKind;
+use crate::app::render::rgl::uniform_buffer::UniformBuffer;
+use crate::app::render::{CameraData, WebRenderer};
+use crate::app::Assets;
+use crate::app::Mat;
+use crate::app::State;
+use gltf::mesh::util::ReadIndices;
+use gltf::mesh::util::ReadTexCoords;
+use gltf::{buffer::Data, Primitive};
+use nalgebra;
+use nalgebra::ArrayStorage;
+use nalgebra::Isometry3;
+use nalgebra::Scale3;
+use nalgebra::Vector3;
+use std::rc::Rc;
+use web_sys::WebGl2RenderingContext as GL;
+use web_sys::*;
+#[derive(Debug, Clone)]
+pub struct Mesh {
+    pub mesh: usize,
+    pub mat: Mat,
+
+    pub position: Vector3<f32>,
+    pub scale: Vector3<f32>,
+    pub rotation: Vector3<f32>,
+    pub update: Option<String>,
+}
+
+impl Render for Mesh {
+    fn buffer_attributes(
+        &self,
+        gl: &WebGl2RenderingContext,
+        shader: &Shader,
+        state: &State,
+    ) -> BufferedMesh {
+        BufferedMesh { tri_size: 0 }
+    }
+
+    fn render_in_water(&self) -> bool {
+        true
+    }
+
+    fn render(
+        &self,
+        gl: &WebGl2RenderingContext,
+        buffer: &BufferedMesh,
+        shader: &Shader,
+        renderer: &WebRenderer,
+        camera: &UniformBuffer<CameraData>,
+        state: &State,
+        assets: &Assets,
+    ) {
+        // Render Meshes
+        let non_skinned_shader = renderer
+            .shader_sys
+            .get_shader(&ShaderKind::NonSkinnedMesh)
+            .unwrap();
+        renderer
+            .shader_sys
+            .use_program(gl, ShaderKind::NonSkinnedMesh);
+
+        let mut gizmos: Vec<(Vector3<f32>, Vector3<f32>)> = Vec::new();
+
+        let mut mesh_opts = MeshRenderOpts {
+            pos: self.position,
+            scale: self.scale,
+            rot: self.rotation,
+            clip_plane: [0., 1., 0., 100000.],
+            flip_camera_y: false,
+        };
+
+        if let Some(doc) = assets.get_gltf(self.mesh) {
+            for node in doc.doc.nodes() {
+                match node.transform() {
+                    gltf::scene::Transform::Matrix { matrix: _ } => todo!(),
+                    gltf::scene::Transform::Decomposed {
+                        translation,
+                        rotation: _,
+                        scale,
+                    } => {
+                        let s = Vector3::from_array_storage(ArrayStorage([scale]));
+
+                        mesh_opts.pos = self.position
+                            + Vector3::from_array_storage(ArrayStorage([translation]));
+
+                        mesh_opts.scale = mesh_opts.scale.component_mul(&s);
+                    }
+                }
+
+                if let Some(m) = node.mesh() {
+                    //get primitives
+                    for p in m.primitives() {
+                        let meshdata = NonSkinnedGltfMesh {
+                            mesh: &p,
+                            buffers: &doc.buffers,
+                            opts: &mesh_opts,
+                        };
+
+                        let bounds = p.bounding_box();
+                        let min = Vector3::from_data(ArrayStorage([bounds.min]));
+                        let max = Vector3::from_data(ArrayStorage([bounds.max]));
+
+                        let pos = (min + max) * 0.5f32;
+                        let extents = (max - pos).component_mul(&mesh_opts.scale);
+
+                        gizmos.push((
+                            pos + mesh_opts.pos + Vector3::new(0.0, extents.y, 0.0),
+                            extents,
+                        ));
+
+                        // if let Uri { uri, .. } = p
+                        //     .material()
+                        //     .pbr_metallic_roughness()
+                        //     .base_color_texture()
+                        //     .unwrap()
+                        //     .texture()
+                        //     .source()
+                        //     .source()
+                        // {}
+
+                        let mat = match p.material().index().map(|i| *assets.get_material(i)) {
+                            Some(Some(m)) => m,
+                            _ => self.mat,
+                        };
+
+                        //    log::info!("{}", mat.normal);
+
+                        let mesh_mat = MatAlbedo {
+                            shader: non_skinned_shader.clone(),
+                            tex: assets.get_tex(mat.tex),
+                            normal: assets.get_tex(mat.normal),
+                        };
+
+                        mesh_mat.bind_uniforms(gl, camera, state);
+
+                        //    web_sys::console::log_1(&p.index().into());
+                        //web_sys::console::log_1(&"Rendering mesh".into());
+
+                        let b = renderer.prepare_for_render(
+                            gl,
+                            &meshdata,
+                            non_skinned_shader,
+                            &format!("{}{}{}", &self.mesh, m.index(), p.index()),
+                            state,
+                        );
+
+                        meshdata.render(
+                            gl,
+                            &b,
+                            non_skinned_shader,
+                            renderer,
+                            camera,
+                            state,
+                            assets,
+                        );
+                    }
+                }
+            }
+        }
+        let wireframe_shader = renderer
+            .shader_sys
+            .get_shader(&ShaderKind::WireFrame)
+            .unwrap();
+
+        renderer.shader_sys.use_program(gl, ShaderKind::WireFrame);
+        for (pos, extents) in gizmos {
+            let b = Cube::new(pos, extents);
+            //    log::info!("Gizmo at p: {} e: {}", pos, extents);
+            let buff = renderer.prepare_for_render(gl, &b, wireframe_shader, "gizmo", state);
+
+            b.render(gl, &buff, wireframe_shader, renderer, camera, state, assets)
+        }
+    }
+}

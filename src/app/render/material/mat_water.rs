@@ -1,4 +1,4 @@
-use crate::render::{
+use crate::app::render::{
     rgl::{
         shader::Shader,
         texture::{Tex, TexUnit},
@@ -14,8 +14,8 @@ pub struct MatWater {
     // Textures
     pub dudv: std::rc::Rc<Tex>,
     pub normal_map: std::rc::Rc<Tex>,
-    pub refraction: std::rc::Rc<crate::render::rgl::Framebuffer>,
-    pub reflection: std::rc::Rc<crate::render::rgl::Framebuffer>,
+    pub refraction: std::rc::Rc<crate::app::render::rgl::Framebuffer>,
+    pub reflection: std::rc::Rc<crate::app::render::rgl::Framebuffer>,
     //Rendering params
     pub reflectivity: f32,
     pub fresnel_strength: f32,
@@ -28,7 +28,9 @@ impl Material for MatWater {
     fn bind_uniforms(
         &self,
         gl: &web_sys::WebGl2RenderingContext,
-        camera: &crate::render::rgl::uniform_buffer::UniformBuffer<crate::render::CameraData>,
+        camera: &crate::app::render::rgl::uniform_buffer::UniformBuffer<
+            crate::app::render::CameraData,
+        >,
         state: &crate::app::store::State,
     ) {
         let shader: &Shader = &self.shader;
