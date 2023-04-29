@@ -1,4 +1,5 @@
 pub mod display;
+pub mod entity;
 pub mod keyboard;
 pub mod mesh;
 mod mouse;
@@ -8,6 +9,7 @@ use nalgebra::Vector3;
 use crate::app::render::render_trait::Render;
 
 use self::display::Display;
+use self::entity::Entity;
 use self::keyboard::KeyCode;
 use self::keyboard::Keyboard;
 use self::mouse::*;
@@ -46,7 +48,7 @@ pub struct State {
     keyboard: Keyboard,
     mouse: Mouse,
     show_scenery: bool,
-    pub entities: Vec<std::rc::Rc<std::cell::RefCell<Box<dyn Render>>>>,
+    pub entities: Vec<std::rc::Rc<std::cell::RefCell<dyn Entity>>>,
 }
 
 impl State {

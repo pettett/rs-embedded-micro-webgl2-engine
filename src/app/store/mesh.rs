@@ -8,8 +8,10 @@ use crate::app::render::render_trait::Render;
 use crate::app::render::rgl::shader::Shader;
 use crate::app::render::rgl::shader::ShaderKind;
 use crate::app::render::rgl::uniform_buffer::UniformBuffer;
+use crate::app::render::RenderStage;
 use crate::app::render::{CameraData, WebRenderer};
 use crate::app::Assets;
+use crate::app::Control;
 use crate::app::Mat;
 use crate::app::State;
 use gltf::mesh::util::ReadIndices;
@@ -23,6 +25,8 @@ use nalgebra::Vector3;
 use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
+
+use super::entity::Entity;
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub mesh: usize,
@@ -34,30 +38,24 @@ pub struct Mesh {
     pub update: Option<String>,
 }
 
-impl Render for Mesh {
-    fn buffer_attributes(
-        &self,
-        gl: &WebGl2RenderingContext,
-        shader: &Shader,
-        state: &State,
-    ) -> BufferedMesh {
-        BufferedMesh { tri_size: 0 }
-    }
-
-    fn render_in_water(&self) -> bool {
-        true
+impl Entity for Mesh {
+    fn should_render(&self, stage: &RenderStage) -> bool {
+        *stage != RenderStage::Water
     }
 
     fn render(
         &self,
         gl: &WebGl2RenderingContext,
-        buffer: &BufferedMesh,
         shader: &Shader,
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
+        clip_plane: [f32; 4],
+        stage: RenderStage,
         state: &State,
         assets: &Assets,
     ) {
+        //log::info!("Rendering mesh");
+
         // Render Meshes
         let non_skinned_shader = renderer
             .shader_sys
@@ -73,7 +71,7 @@ impl Render for Mesh {
             pos: self.position,
             scale: self.scale,
             rot: self.rotation,
-            clip_plane: [0., 1., 0., 100000.],
+            clip_plane,
             flip_camera_y: false,
         };
 
@@ -152,15 +150,7 @@ impl Render for Mesh {
                             state,
                         );
 
-                        meshdata.render(
-                            gl,
-                            &b,
-                            non_skinned_shader,
-                            renderer,
-                            camera,
-                            state,
-                            assets,
-                        );
+                        meshdata.render(gl, &b, non_skinned_shader, renderer, camera, state);
                     }
                 }
             }
@@ -176,7 +166,13 @@ impl Render for Mesh {
             //    log::info!("Gizmo at p: {} e: {}", pos, extents);
             let buff = renderer.prepare_for_render(gl, &b, wireframe_shader, "gizmo", state);
 
-            b.render(gl, &buff, wireframe_shader, renderer, camera, state, assets)
+            b.render(gl, &buff, wireframe_shader, renderer, camera, state)
+        }
+    }
+
+    fn update(&mut self, control: &Control) {
+        if let Some(f) = &self.update {
+            //    control.run_func(&f, m.clone());
         }
     }
 }

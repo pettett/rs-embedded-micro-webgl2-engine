@@ -65,7 +65,6 @@ impl Render for Cube {
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
-        assets: &Assets,
     ) {
         let block_index = shader.get_uniform_block_index(gl, "Camera");
         camera.bind_base(gl, &shader, block_index, 2);

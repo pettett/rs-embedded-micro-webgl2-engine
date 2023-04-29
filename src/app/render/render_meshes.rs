@@ -18,20 +18,21 @@ use super::rgl::uniform_buffer::UniformBuffer;
 use super::CameraData;
 use super::MeshRenderOpts;
 use super::NonSkinnedGltfMesh;
+use super::RenderStage;
 
 // static BIRD_SPEED: f32 = 3.5;
 // static BIRD_START_Z: f32 = -30.0;
 // static BIRD_END_Z: f32 = 30.0;
 
 impl WebRenderer {
-    pub(in crate::app::render) fn render_meshes(
+    pub(in crate::app::render) fn render_entities(
         &self,
         gl: &GL,
         state: &State,
         assets: &Assets,
         camera: &UniformBuffer<CameraData>,
         clip_plane: [f32; 4],
-        flip_camera_y: bool,
+        stage: RenderStage,
     ) {
         if !state.show_scenery() {
             return;
@@ -42,14 +43,21 @@ impl WebRenderer {
             .unwrap();
 
         self.shader_sys.use_program(gl, ShaderKind::NonSkinnedMesh);
-        let mut i = 0;
+
         for entity in &state.entities {
             let e = entity.borrow();
-            let b =
-                self.prepare_for_render(gl, &**e, non_skinned_shader, &format!("{}", &i), state);
-
-            e.render(gl, &b, non_skinned_shader, &self, camera, state, assets);
-            i += 1;
+            if e.should_render(&stage) {
+                e.render(
+                    gl,
+                    non_skinned_shader,
+                    &self,
+                    camera,
+                    clip_plane.clone(),
+                    stage,
+                    state,
+                    assets,
+                );
+            }
         }
 
         // let non_skinned_shader = self

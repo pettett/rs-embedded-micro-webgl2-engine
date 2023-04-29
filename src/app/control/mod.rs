@@ -9,7 +9,10 @@ use crate::app::render::render_trait::Render;
 
 use self::from_rhai::FromRhai;
 
-use super::{store::Mesh, Assets, LuaMsg, Store};
+use super::{
+    store::{entity::Entity, Mesh},
+    Assets, LuaMsg, Store,
+};
 pub struct Control {
     engine: Engine,
     scope: Scope<'static, 8>,
@@ -133,7 +136,7 @@ impl Control {
             .eval_ast_with_scope(&mut self.scope, &self.on_load)
     }
 
-    pub fn run_func(&mut self, func: &str, entity: Rc<RefCell<Mesh>>) -> Dynamic {
+    pub fn run_func(&mut self, func: &str, entity: Rc<RefCell<dyn Entity>>) -> Dynamic {
         // ensure entity is borrowable, before we fail within the function
         entity.borrow_mut();
 
@@ -163,7 +166,7 @@ impl Control {
                 "mesh" => {
                     let m = super::Mesh::try_from_rhai(entity, &mut assets.borrow_mut()).unwrap();
 
-                    let e: Rc<RefCell<Box<dyn Render>>> = Rc::new(RefCell::new(Box::new(m)));
+                    let e: Rc<RefCell<dyn Entity>> = Rc::new(RefCell::new(m));
                     state.borrow_mut().state.entities.push(e)
                 }
                 "water" => {
@@ -174,8 +177,8 @@ impl Control {
                         .borrow_mut()
                         .require_texture("assets/textures/normalmap.png".to_owned());
 
-                    let e: Rc<RefCell<Box<dyn Render>>> =
-                        Rc::new(RefCell::new(Box::new(crate::app::store::water::Water {
+                    let e: Rc<RefCell<dyn Entity>> =
+                        Rc::new(RefCell::new(crate::app::store::water::Water {
                             dudv: d,
                             normal: n,
                             reflectivity: f32_or(&entity, "reflectivity", 0.5),
@@ -183,7 +186,7 @@ impl Control {
                             wave_speed: f32_or(&entity, "wave_speed", 0.5),
                             use_refraction: bool_or(&entity, "use_refraction", true),
                             use_reflection: bool_or(&entity, "use_reflection", true),
-                        })));
+                        }));
                     state.borrow_mut().state.entities.push(e)
                 }
                 _ => return Err("Unknown Entity Type"),

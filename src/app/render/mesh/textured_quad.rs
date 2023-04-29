@@ -66,7 +66,6 @@ impl Render for TexturedQuad {
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
-        assets: &Assets,
     ) {
         gl.uniform1i(
             shader.get_uniform_location(gl, "u_texture").as_ref(),

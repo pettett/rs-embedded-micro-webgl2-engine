@@ -1,4 +1,5 @@
 use crate::app::render::buffer_f32_data;
+use crate::app::render::buffer_sf32_data;
 use crate::app::render::buffer_u16_indices;
 use crate::app::render::rgl::shader::Shader;
 use crate::app::render::rgl::shader::ShaderKind;
@@ -7,6 +8,7 @@ use crate::app::render::BufferedMesh;
 use crate::app::render::CameraData;
 use crate::app::render::Render;
 use crate::app::render::WebRenderer;
+use crate::app::store::entity::Entity;
 use crate::app::store::water::Water;
 use crate::app::Assets;
 use crate::app::State;
@@ -24,16 +26,16 @@ impl Render for Water {
         // These vertices are the x and z values that create a flat square tile on the `y = 0`
         // plane. In our render function we'll scale this quad into the water size that we want.
         // x and z values, y is omitted since this is a flat surface. We set it in the vertex shader
-        let vertices: [f32; 8] = [
-            -30.5, 30.5, // Bottom Left
-            30.5, 30.5, // Bottom Right
-            30.5, -30.5, // Top Right
-            -30.5, -30.5, // Top Left
+        let vertices: [[f32; 2]; 4] = [
+            [-30.5, 30.5],  // Bottom Left
+            [30.5, 30.5],   // Bottom Right
+            [30.5, -30.5],  // Top Right
+            [-30.5, -30.5], // Top Left
         ];
 
         let mut indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
-        buffer_f32_data(&gl, &vertices, pos_attrib as u32, 2);
+        buffer_sf32_data(&gl, &vertices, pos_attrib as u32);
         buffer_u16_indices(&gl, &mut indices);
 
         BufferedMesh {
@@ -49,7 +51,6 @@ impl Render for Water {
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
-        assets: &Assets,
     ) {
         let model_uni = shader.get_uniform_location(gl, "model");
 

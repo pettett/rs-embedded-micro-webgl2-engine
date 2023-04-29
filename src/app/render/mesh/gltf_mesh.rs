@@ -104,7 +104,6 @@ impl<'a> Render for NonSkinnedGltfMesh<'a> {
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         state: &State,
-        assets: &Assets,
     ) {
         let mesh = self.mesh;
         let opts = self.opts;
