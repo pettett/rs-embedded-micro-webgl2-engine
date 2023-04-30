@@ -1,10 +1,8 @@
 use crate::app::render::buffer_f32_data;
 use crate::app::render::WebRenderer;
-use crate::app::Assets;
 use crate::app::State;
 //use crate::canvas::{CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::app::render::rgl::shader::Shader;
-use crate::app::render::rgl::shader::ShaderKind;
 use crate::app::render::rgl::texture::TexUnit;
 use crate::app::render::rgl::uniform_buffer::UniformBuffer;
 use crate::app::render::Render;

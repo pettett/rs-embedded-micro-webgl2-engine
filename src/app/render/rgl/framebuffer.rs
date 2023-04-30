@@ -10,7 +10,6 @@ pub static REFRACTION_TEXTURE_HEIGHT: i32 = 512;
 
 use std::collections::HashMap;
 
-use crate::app::render::TextureUnit;
 use crate::app::render::WebRenderer;
 use wasm_bindgen::JsValue;
 use web_sys::WebGl2RenderingContext as GL;
@@ -90,16 +89,12 @@ impl WebRenderer {
         {
             let mut fb = framebuffer.bind(gl);
 
-            gl.active_texture(TextureUnit::Refraction.TEXTURE_N());
-
             let color_texture = Tex::new_color(
                 gl,
                 REFRACTION_TEXTURE_WIDTH,
                 REFRACTION_TEXTURE_HEIGHT,
                 TexFilter::Nearest,
             )?;
-
-            gl.active_texture(TextureUnit::RefractionDepth.TEXTURE_N());
 
             let depth_texture =
                 Tex::new_depth(gl, REFRACTION_TEXTURE_WIDTH, REFRACTION_TEXTURE_HEIGHT)?;
@@ -119,8 +114,6 @@ impl WebRenderer {
         let mut framebuffer = Framebuffer::new(gl);
         {
             let mut fb = framebuffer.bind(gl);
-
-            gl.active_texture(TextureUnit::Reflection.TEXTURE_N());
 
             let color_texture = Tex::new_color(
                 gl,

@@ -5,11 +5,12 @@ use rhai::{Dynamic, Engine, ParseError, Scope, AST};
 pub mod from_rhai;
 mod mesh_from_rhai;
 
-use crate::app::render::render_trait::Render;
+use crate::app::render::material::mat::Uniform;
 
 use self::from_rhai::FromRhai;
 
 use super::{
+    render::material::mat::Mat,
     store::{entity::Entity, Mesh},
     Assets, LuaMsg, Store,
 };
@@ -74,7 +75,7 @@ impl Control {
         }
     }
 
-    pub fn new() -> Self {
+    pub fn new(assets: Rc<RefCell<Assets>>) -> Self {
         let mut engine = Engine::new();
         engine.on_print(|x| log::info!("{}", x));
 
@@ -114,6 +115,10 @@ impl Control {
                     b.rotation[2] = value[2].as_float().unwrap() as f32;
                 },
             );
+
+        engine.register_fn("tex", move |name: String| {
+            Uniform::Tex(assets.borrow_mut().require_texture(name))
+        });
 
         Control {
             on_load: engine.compile("40 + 2").unwrap(),
@@ -169,10 +174,17 @@ impl Control {
                     let e: Rc<RefCell<dyn Entity>> = Rc::new(RefCell::new(m));
                     state.borrow_mut().state.entities.push(e)
                 }
+                "mat" => {
+                    let name = entity["name"].clone().into_string()?;
+                    let mat = Mat::try_from_rhai(entity, &mut assets.borrow_mut()).unwrap();
+
+                    assets.borrow_mut().insert_material(name, mat)
+                }
                 "water" => {
                     let d = assets
                         .borrow_mut()
                         .require_texture("assets/textures/dudvmap.png".to_owned());
+
                     let n = assets
                         .borrow_mut()
                         .require_texture("assets/textures/normalmap.png".to_owned());

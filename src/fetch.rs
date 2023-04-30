@@ -47,10 +47,9 @@ pub fn fetch_texture_image(gl: Rc<GL>, assets: Rc<RefCell<Assets>>, src: String)
     let src_clone = src.clone();
 
     let onload = Closure::wrap(Box::new(move || {
-        assets.borrow_mut().register_tex(
-            src_clone.clone(),
-            Tex::new_from_img(&gl, image_clone.clone()),
-        );
+        assets
+            .borrow_mut()
+            .register_tex(&src_clone, Tex::new_from_img(&gl, image_clone.clone()));
     }) as Box<dyn Fn()>);
 
     let image = image.borrow_mut();

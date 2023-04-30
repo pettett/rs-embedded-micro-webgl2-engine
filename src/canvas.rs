@@ -1,3 +1,4 @@
+use crate::app::store::State;
 use crate::app::App;
 use crate::app::Msg;
 use std::rc::Rc;
@@ -12,7 +13,9 @@ pub static APP_DIV_ID: &'static str = "webgl-water-tutorial";
 //pub static CANVAS_WIDTH: i32 = 720;
 //pub static CANVAS_HEIGHT: i32 = 512;
 
-pub fn create_webgl_context(app: Rc<App>) -> Result<WebGl2RenderingContext, JsValue> {
+pub fn create_webgl_context(
+    app: Rc<App>,
+) -> Result<(WebGl2RenderingContext, HtmlCanvasElement), JsValue> {
     let canvas = init_canvas(app)?;
 
     let gl: WebGl2RenderingContext = canvas.get_context("webgl2")?.unwrap().dyn_into()?;
@@ -20,7 +23,7 @@ pub fn create_webgl_context(app: Rc<App>) -> Result<WebGl2RenderingContext, JsVa
     gl.clear_color(0.0, 0.0, 0.0, 1.0);
     gl.enable(GL::DEPTH_TEST);
     gl.enable(GL::CULL_FACE);
-    Ok(gl)
+    Ok((gl, canvas))
 }
 
 fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
@@ -54,25 +57,48 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
             app_div.dyn_into()?
         }
     };
+    // It needs initial values. for some reason.
+    canvas.set_width(16);
+    canvas.set_height(9);
+    let state = &mut app.store.borrow_mut().state;
+    state.display.width = 16;
+    state.display.height = 9;
+    state.camera_mut().update_aspect(16.0 / 9.0);
+
+    //    update_display(&canvas, &mut app.store.borrow_mut().state);
 
     app_div.append_child(&canvas)?;
 
+    Ok(canvas)
+}
+
+/// Test if the canvas has changed size, and if it has, call the relevant functions.
+/// This should be more extensible
+pub fn update_display(canvas: &HtmlCanvasElement, state: &mut State) {
+    let window = window().unwrap();
     let dpr: f64 = window.device_pixel_ratio();
     let display_width = (canvas.client_width() as f64 * dpr).round() as u32;
     let display_height = (canvas.client_height() as f64 * dpr).round() as u32;
 
-    canvas.set_width(display_width);
-    canvas.set_height(display_height);
+    if display_width != state.display.width || display_height != state.display.height {
+        canvas.set_width(display_width);
+        canvas.set_height(display_height);
 
-    let mut store = app.store.borrow_mut();
-    store.state.display.width = display_width;
-    store.state.display.height = display_height;
-    store
-        .state
-        .camera_mut()
-        .update_aspect((display_width as f32) / (display_height as f32));
+        state.display.width = display_width;
+        state.display.height = display_height;
+        state.display.changed_this_frame = true;
+        state
+            .camera_mut()
+            .update_aspect((display_width as f32) / (display_height as f32));
 
-    Ok(canvas)
+        log::info!(
+            "New resolution: {}x{}",
+            state.display.width,
+            state.display.height
+        );
+    } else {
+        state.display.changed_this_frame = false;
+    }
 }
 
 fn attach_mouse_down_handler(canvas: &HtmlCanvasElement, app: Rc<App>) -> Result<(), JsValue> {

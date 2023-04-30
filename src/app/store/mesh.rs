@@ -1,36 +1,24 @@
-use crate::app::render::material::MatAlbedo;
-use crate::app::render::material::Material;
 use crate::app::render::mesh::cube::Cube;
 use crate::app::render::mesh::MeshRenderOpts;
 use crate::app::render::mesh::NonSkinnedGltfMesh;
-use crate::app::render::render_trait::BufferedMesh;
 use crate::app::render::render_trait::Render;
-use crate::app::render::rgl::shader::Shader;
 use crate::app::render::rgl::shader::ShaderKind;
 use crate::app::render::rgl::uniform_buffer::UniformBuffer;
 use crate::app::render::RenderStage;
 use crate::app::render::{CameraData, WebRenderer};
 use crate::app::Assets;
 use crate::app::Control;
-use crate::app::Mat;
 use crate::app::State;
-use gltf::mesh::util::ReadIndices;
-use gltf::mesh::util::ReadTexCoords;
-use gltf::{buffer::Data, Primitive};
 use nalgebra;
 use nalgebra::ArrayStorage;
-use nalgebra::Isometry3;
-use nalgebra::Scale3;
 use nalgebra::Vector3;
-use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
-use web_sys::*;
 
 use super::entity::Entity;
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub mesh: usize,
-    pub mat: Mat,
+    pub mat: usize,
 
     pub position: Vector3<f32>,
     pub scale: Vector3<f32>,
@@ -45,7 +33,7 @@ impl Entity for Mesh {
 
     fn render(
         &self,
-        gl: &WebGl2RenderingContext,
+        gl: &GL,
         renderer: &WebRenderer,
         camera: &UniformBuffer<CameraData>,
         clip_plane: [f32; 4],
@@ -123,20 +111,25 @@ impl Entity for Mesh {
                         //     .source()
                         // {}
 
-                        let mat = match p.material().index().map(|i| *assets.get_material(i)) {
-                            Some(Some(m)) => m,
-                            _ => self.mat,
+                        if let Some(mat) = assets.get_material(match p.material().index() {
+                            Some(i) => i,
+                            None => self.mat,
+                        }) {
+                            mat.uniform(gl, &non_skinned_shader, assets);
                         };
 
                         //    log::info!("{}", mat.normal);
 
-                        let mesh_mat = MatAlbedo {
-                            shader: non_skinned_shader.clone(),
-                            tex: assets.get_tex(mat.tex),
-                            normal: assets.get_tex(mat.normal),
-                        };
+                        // let mesh_mat = MatAlbedo {
+                        //     shader: non_skinned_shader.clone(),
+                        //     tex: assets.get_tex(mat.tex),
+                        //     normal: assets.get_tex(mat.normal),
+                        // };
 
-                        mesh_mat.bind_uniforms(gl, camera, state);
+                        let block_index = non_skinned_shader.get_uniform_block_index(gl, "Camera");
+                        camera.bind_base(gl, &non_skinned_shader, block_index, 2);
+
+                        //mesh_mat.bind_uniforms(gl, camera, state);
 
                         //    web_sys::console::log_1(&p.index().into());
                         //web_sys::console::log_1(&"Rendering mesh".into());

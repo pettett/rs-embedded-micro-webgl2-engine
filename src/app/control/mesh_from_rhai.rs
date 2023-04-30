@@ -1,22 +1,19 @@
 use nalgebra::{ArrayStorage, Vector3};
 
-use crate::app::{store::Mesh, Assets, Mat};
+use crate::app::{store::Mesh, Assets};
 
 use super::from_rhai::FromRhai;
 
 impl FromRhai for Mesh {
     fn try_from_rhai(map: rhai::Map, assets: &mut Assets) -> Result<Mesh, &'static str> {
         let name = map["mesh"].clone().into_string().unwrap();
-        let tex = if let Some(texture) = map.get("texture") {
-            assets.require_texture(texture.clone().into_string().unwrap())
+
+        let mat = if let Some(texture) = map.get("normal") {
+            assets.require_material(texture.clone().into_string().unwrap())
         } else {
             0
         };
-        let normal = if let Some(texture) = map.get("normal") {
-            assets.require_texture(texture.clone().into_string().unwrap())
-        } else {
-            0
-        };
+
         let mesh = assets.require_gltf(name);
 
         // Load the mesh if it doesnt exist already
@@ -52,7 +49,7 @@ impl FromRhai for Mesh {
 
         Ok(super::Mesh {
             mesh,
-            mat: Mat { tex, normal },
+            mat,
             scale: Vector3::from_array_storage(ArrayStorage([scale])),
             position: Vector3::from_array_storage(ArrayStorage([pos])),
             rotation: Vector3::from_array_storage(ArrayStorage([rot])),

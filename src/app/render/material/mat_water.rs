@@ -1,9 +1,6 @@
-use crate::app::render::{
-    rgl::{
-        shader::Shader,
-        texture::{Tex, TexUnit},
-    },
-    TextureUnit,
+use crate::app::render::rgl::{
+    shader::Shader,
+    texture::{Tex, TexUnit},
 };
 
 use super::Material;
@@ -35,31 +32,22 @@ impl Material for MatWater {
     ) {
         let shader: &Shader = &self.shader;
 
-        self.dudv.bind_at(
-            gl,
-            &TexUnit::new(gl, TextureUnit::Dudv.texture_unit() as u32),
-        );
+        let dudv = TexUnit::new(gl, 0);
+        let normal_map = TexUnit::new(gl, 1);
+        let refraction = TexUnit::new(gl, 2);
+        let refraction_depth = TexUnit::new(gl, 3);
+        let reflection = TexUnit::new(gl, 4);
 
-        self.normal_map.bind_at(
-            gl,
-            &TexUnit::new(gl, TextureUnit::NormalMap.texture_unit() as u32),
-        );
+        self.dudv.bind_at(gl, &dudv);
 
-        self.refraction.bind_to_unit(
-            gl,
-            GL::COLOR_ATTACHMENT0,
-            &TexUnit::new(gl, TextureUnit::Refraction.texture_unit() as u32),
-        );
-        self.refraction.bind_to_unit(
-            gl,
-            GL::DEPTH_ATTACHMENT,
-            &TexUnit::new(gl, TextureUnit::RefractionDepth.texture_unit() as u32),
-        );
-        self.reflection.bind_to_unit(
-            gl,
-            GL::COLOR_ATTACHMENT0,
-            &TexUnit::new(gl, TextureUnit::Reflection.texture_unit() as u32),
-        );
+        self.normal_map.bind_at(gl, &normal_map);
+
+        self.refraction
+            .bind_to_unit(gl, GL::COLOR_ATTACHMENT0, &refraction);
+        self.refraction
+            .bind_to_unit(gl, GL::DEPTH_ATTACHMENT, &refraction_depth);
+        self.reflection
+            .bind_to_unit(gl, GL::COLOR_ATTACHMENT0, &reflection);
 
         let refraction_texture_uni = shader.get_uniform_location(gl, "refractionTexture");
         let reflection_texture_uni = shader.get_uniform_location(gl, "reflectionTexture");
@@ -70,23 +58,11 @@ impl Material for MatWater {
         let water_reflectivity_uni = shader.get_uniform_location(gl, "waterReflectivity");
         let fresnel_strength_unit = shader.get_uniform_location(gl, "fresnelStrength");
 
-        gl.uniform1i(
-            refraction_texture_uni.as_ref(),
-            TextureUnit::Refraction.texture_unit(),
-        );
-        gl.uniform1i(
-            reflection_texture_uni.as_ref(),
-            TextureUnit::Reflection.texture_unit(),
-        );
-        gl.uniform1i(dudv_texture_uni.as_ref(), TextureUnit::Dudv.texture_unit());
-        gl.uniform1i(
-            normal_map_uni.as_ref(),
-            TextureUnit::NormalMap.texture_unit(),
-        );
-        gl.uniform1i(
-            water_depth_texture_uni.as_ref(),
-            TextureUnit::RefractionDepth.texture_unit(),
-        );
+        gl.uniform1i(refraction_texture_uni.as_ref(), refraction.uniti());
+        gl.uniform1i(reflection_texture_uni.as_ref(), reflection.uniti());
+        gl.uniform1i(dudv_texture_uni.as_ref(), dudv.uniti());
+        gl.uniform1i(normal_map_uni.as_ref(), normal_map.uniti());
+        gl.uniform1i(water_depth_texture_uni.as_ref(), refraction_depth.uniti());
 
         gl.uniform1f(water_reflectivity_uni.as_ref(), self.reflectivity);
 

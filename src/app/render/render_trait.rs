@@ -1,6 +1,4 @@
 use crate::app::render::rgl::shader::Shader;
-use crate::app::render::rgl::shader::ShaderKind;
-use crate::app::Assets;
 use crate::State;
 use web_sys::WebGl2RenderingContext as GL;
 

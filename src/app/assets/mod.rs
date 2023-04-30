@@ -3,10 +3,15 @@ use gltf::{
     image::Source,
     Document, Error,
 };
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 use web_sys::WebGl2RenderingContext;
 
 use crate::{fetch, render::rgl::texture::Tex};
+
+use super::render::material::{Mat, Uniform};
 
 pub struct GltfMesh {
     pub doc: Document,
@@ -31,9 +36,16 @@ impl<T> AssetStore<T> {
             id
         }
     }
-    pub fn load(&mut self, asset_name: String, asset: T) {
-        self.assets[self.asset_indexes[&asset_name]] = Some(asset);
+    ///Loads a registered texture
+    pub fn load(&mut self, asset_name: &str, asset: T) {
+        self.assets[self.asset_indexes[asset_name]] = Some(asset);
     }
+    ///Inserts a completely new asset
+    pub fn insert(&mut self, asset_name: String, asset: T) {
+        self.asset_indexes.insert(asset_name, self.assets.len());
+        self.assets.push(Some(asset));
+    }
+
     /// Clear the loading asset store and return it
     pub fn consume_loading(&mut self) -> HashSet<String> {
         let l = self.loading_assets.clone();
@@ -58,12 +70,6 @@ impl<T> Default for AssetStore<T> {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Mat {
-    pub tex: usize,
-    pub normal: usize,
-}
-
 pub struct Assets {
     textures: AssetStore<std::rc::Rc<Tex>>,
     gltf: AssetStore<GltfMesh>,
@@ -71,12 +77,31 @@ pub struct Assets {
 
     error_tex: Option<std::rc::Rc<Tex>>,
 }
+
+impl Display for Assets {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "Assets:[textures: {}, meshes: {}, mats: {}]",
+            self.textures, self.gltf, self.materials
+        ))
+    }
+}
+impl<T> Display for AssetStore<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "[loaded: {}, loading: {}]",
+            self.assets.len(),
+            self.loading_assets.len()
+        ))
+    }
+}
+
 impl Assets {
     pub fn new() -> Assets {
         Assets {
             textures: Default::default(),
             gltf: Default::default(),
-            materials: Default::default(),
+            materials: AssetStore::<Mat>::default(),
             error_tex: None,
         }
     }
@@ -97,7 +122,7 @@ impl Assets {
                 .unwrap();
 
             assets.borrow_mut().load_gltf(
-                gltf,
+                &gltf,
                 GltfMesh {
                     doc: doc.document,
                     buffers,
@@ -145,7 +170,7 @@ impl Assets {
         Ok(buffers)
     }
 
-    pub fn load_gltf(&mut self, gltf_name: String, gltf: GltfMesh) {
+    pub fn load_gltf(&mut self, gltf_name: &str, gltf: GltfMesh) {
         self.gltf.load(gltf_name, gltf);
     }
 
@@ -156,6 +181,12 @@ impl Assets {
         self.textures.require(tex)
     }
 
+    pub fn require_material(&mut self, mat: String) -> usize {
+        self.materials.require(mat)
+    }
+    pub fn insert_material(&mut self, name: String, mat: Mat) {
+        self.materials.insert(name, mat);
+    }
     pub fn load_material(&mut self, index: usize, mat: Mat) {
         while self.materials.assets.len() <= index + 1 {
             self.materials.assets.push(None);
@@ -163,14 +194,14 @@ impl Assets {
 
         self.materials.assets[index] = Some(mat);
     }
-    pub fn get_material(&self, mat: usize) -> &Option<Mat> {
+    pub fn get_material(&self, mat: usize) -> Option<&Mat> {
         match self.materials.assets.get(mat) {
-            Some(m) => m,
-            None => &None,
+            Some(m) => m.as_ref(),
+            _ => None,
         }
     }
 
-    pub fn register_tex(&mut self, tex_name: String, tex: Tex) {
+    pub fn register_tex(&mut self, tex_name: &str, tex: Tex) {
         self.textures.load(tex_name, std::rc::Rc::new(tex));
     }
 
@@ -221,7 +252,13 @@ impl Assets {
             let tex = self.require_texture(uri_col);
             let normal = self.require_texture(uri_norm);
 
-            self.load_material(id, Mat { tex, normal });
+            self.load_material(
+                id,
+                Mat::filled(vec![
+                    ("meshTexture".to_owned(), Uniform::Tex(tex)),
+                    ("meshNormal".to_owned(), Uniform::Tex(normal)),
+                ]),
+            );
         }
     }
 }

@@ -22,10 +22,11 @@ pub struct App {
 impl App {
     /// Create a new instance of our WebGL Water application
     pub fn new() -> App {
+        let assets = Rc::new(RefCell::new(Assets::new()));
         App {
-            assets: Rc::new(RefCell::new(Assets::new())),
+            control: Rc::new(RefCell::new(Control::new(assets.clone()))),
+            assets,
             store: Rc::new(RefCell::new(Store::new())),
-            control: Rc::new(RefCell::new(Control::new())),
         }
     }
 }

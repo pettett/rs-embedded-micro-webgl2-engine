@@ -1,10 +1,6 @@
 use super::State;
 use crate::app::{
-    render::{
-        render_trait::{BufferedMesh, Render},
-        rgl::{shader::Shader, uniform_buffer::UniformBuffer},
-        CameraData, RenderStage, WebRenderer,
-    },
+    render::{rgl::uniform_buffer::UniformBuffer, CameraData, RenderStage, WebRenderer},
     Assets, Control,
 };
 use web_sys::WebGl2RenderingContext as GL;

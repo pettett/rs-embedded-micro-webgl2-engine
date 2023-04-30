@@ -81,7 +81,7 @@ pub enum ShaderKind {
 /// One per ShaderKind
 pub struct Shader {
     pub program: WebGlProgram,
-    uniforms: RefCell<HashMap<&'static str, WebGlUniformLocation>>,
+    uniforms: RefCell<HashMap<String, WebGlUniformLocation>>,
     uniform_block_indexes: RefCell<HashMap<&'static str, u32>>,
 }
 
@@ -113,7 +113,7 @@ impl Shader {
     pub fn get_uniform_location(
         &self,
         gl: &WebGl2RenderingContext,
-        uniform_name: &'static str,
+        uniform_name: &str,
     ) -> Option<WebGlUniformLocation> {
         let mut uniforms = self.uniforms.borrow_mut();
 
@@ -123,7 +123,7 @@ impl Shader {
             let uni = gl
                 .get_uniform_location(&self.program, uniform_name)
                 .expect(&format!(r#"Uniform '{}' not found"#, uniform_name));
-            uniforms.insert(uniform_name, uni.clone());
+            uniforms.insert(uniform_name.to_owned(), uni.clone());
             Some(uni)
         }
     }

@@ -25,8 +25,6 @@ use self::canvas::*;
 use self::render::*;
 use app::keyboard::KeyCode;
 use console_error_panic_hook;
-use gltf::image::Source;
-use gltf::Material;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
@@ -42,6 +40,7 @@ mod fetch;
 pub struct WebClient {
     app: Rc<App>,
     gl: Rc<WebGl2RenderingContext>,
+    canvas: HtmlCanvasElement,
     renderer: WebRenderer,
 }
 #[wasm_bindgen]
@@ -54,11 +53,16 @@ impl WebClient {
 
         let app = Rc::new(App::new());
 
-        let gl = Rc::new(create_webgl_context(Rc::clone(&app)).unwrap());
+        let (gl, canvas) = create_webgl_context(Rc::clone(&app)).unwrap();
 
         let renderer = WebRenderer::new(&gl);
 
-        WebClient { app, gl, renderer }
+        WebClient {
+            app,
+            gl: Rc::new(gl),
+            canvas,
+            renderer,
+        }
     }
 
     /// Start our WebGL Water application. `index.html` will call this function in order
@@ -132,6 +136,8 @@ impl WebClient {
 
     /// Render the scene. `index.html` will call this once every requestAnimationFrame
     pub fn render(&self) {
+        update_display(&self.canvas, &mut self.app.store.borrow_mut().state);
+
         self.renderer.render(
             &self.gl,
             &self.app.store.borrow().state,

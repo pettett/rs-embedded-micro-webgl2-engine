@@ -4,10 +4,6 @@ pub mod keyboard;
 pub mod mesh;
 mod mouse;
 
-use nalgebra::Vector3;
-
-use crate::app::render::render_trait::Render;
-
 use self::display::Display;
 use self::entity::Entity;
 use self::keyboard::KeyCode;
@@ -19,8 +15,6 @@ use self::camera::*;
 pub use self::mesh::Mesh;
 
 pub mod water;
-
-use super::Mat;
 
 pub struct Store {
     // information about game state
@@ -62,8 +56,9 @@ impl State {
             keyboard: Keyboard::default(),
             mouse: Mouse::default(),
             display: Display {
-                width: 1,
-                height: 1,
+                width: 16,
+                height: 9,
+                changed_this_frame: true,
             },
             show_scenery: true,
             entities: vec![],

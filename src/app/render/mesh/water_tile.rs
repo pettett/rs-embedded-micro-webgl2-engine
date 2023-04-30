@@ -1,20 +1,15 @@
-use crate::app::render::buffer_f32_data;
 use crate::app::render::buffer_sf32_data;
 use crate::app::render::buffer_u16_indices;
 use crate::app::render::rgl::shader::Shader;
-use crate::app::render::rgl::shader::ShaderKind;
 use crate::app::render::rgl::uniform_buffer::UniformBuffer;
 use crate::app::render::BufferedMesh;
 use crate::app::render::CameraData;
 use crate::app::render::Render;
 use crate::app::render::WebRenderer;
-use crate::app::store::entity::Entity;
 use crate::app::store::water::Water;
-use crate::app::Assets;
 use crate::app::State;
 use nalgebra;
 use nalgebra::{Isometry3, Matrix4, Vector3};
-use std::rc::Rc;
 use web_sys::WebGl2RenderingContext as GL;
 use web_sys::*;
 

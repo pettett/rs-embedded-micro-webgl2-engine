@@ -8,7 +8,6 @@ use crate::app::render::BufferedMesh;
 use crate::app::render::CameraData;
 use crate::app::render::Render;
 use crate::app::render::WebRenderer;
-use crate::app::Assets;
 use crate::app::State;
 use gltf::mesh::util::ReadIndices;
 use gltf::mesh::util::ReadTexCoords;

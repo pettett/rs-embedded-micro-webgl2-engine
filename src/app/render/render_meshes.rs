@@ -1,23 +1,13 @@
-use crate::app::Mat;
 // use crate::app::render::mesh::MeshRenderOpts;
 // use crate::app::render::mesh::NonSkinnedMesh;
 // use crate::app::render::mesh::SkinnedMesh;
-use crate::app::render::rgl::shader::ShaderKind;
-use crate::app::render::Render;
 use crate::app::render::WebRenderer;
 use crate::Assets;
 use crate::State;
-use nalgebra::ArrayStorage;
-use nalgebra::Vector3;
 use web_sys::WebGl2RenderingContext as GL;
 
-use super::cube::Cube;
-use super::material::MatAlbedo;
-use super::material::Material;
 use super::rgl::uniform_buffer::UniformBuffer;
 use super::CameraData;
-use super::MeshRenderOpts;
-use super::NonSkinnedGltfMesh;
 use super::RenderStage;
 
 // static BIRD_SPEED: f32 = 3.5;

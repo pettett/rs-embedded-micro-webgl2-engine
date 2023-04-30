@@ -1,5 +1,3 @@
-use crate::num::FromPrimitive;
-
 #[derive(Default)]
 pub struct Keyboard {
     w: bool,

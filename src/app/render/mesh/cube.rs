@@ -6,7 +6,6 @@ use crate::app::render::BufferedMesh;
 use crate::app::render::CameraData;
 use crate::app::render::Render;
 use crate::app::render::WebRenderer;
-use crate::app::Assets;
 use crate::app::State;
 use nalgebra;
 use nalgebra::{Isometry3, Matrix4, Vector3};

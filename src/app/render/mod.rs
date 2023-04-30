@@ -1,12 +1,9 @@
-use self::material::MatWater;
-use self::material::Material;
 pub(self) use self::mesh::*;
 pub(self) use self::render_trait::*;
 use self::rgl::framebuffer::*;
 use self::rgl::texture::TexUnit;
 use self::rgl::uniform_buffer::UniformBuffer;
 use self::rgl::Framebuffer;
-pub use self::texture_unit::*;
 use crate::app::store::water::Water;
 use crate::app::Assets;
 use crate::app::State;
@@ -30,10 +27,7 @@ pub mod mesh;
 pub mod render_meshes;
 pub mod render_trait;
 pub mod rgl;
-pub mod texture_unit;
 use rgl::vao::Vao;
-
-use super::store::entity::Entity;
 
 struct VaoExtension {
     vaos: RefCell<HashMap<String, (Vao, BufferedMesh)>>,
@@ -112,6 +106,16 @@ impl WebRenderer {
         gl.clear_color(0.53, 0.8, 0.98, 1.);
         gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
 
+        if state.display.changed_this_frame {
+            // This will be the first viewport call of the render cycle
+            // We call it in case the display has changed size
+            gl.viewport(
+                0,
+                0,
+                state.display.width as i32,
+                state.display.height as i32,
+            );
+        }
         let p = state.camera().get_eye_pos();
 
         let camera = CameraData {
@@ -243,15 +247,7 @@ impl WebRenderer {
         state: &State,
         assets: &Assets,
     ) {
-        self.render_visual(
-            gl,
-            camera,
-            state,
-            assets,
-            TexUnit::new(gl, TextureUnit::Refraction.texture_unit() as u32),
-            70,
-            140,
-        );
+        self.render_visual(gl, camera, state, assets, TexUnit::new(gl, 6), 70, 140);
     }
 
     fn render_reflection_visual(
@@ -261,15 +257,7 @@ impl WebRenderer {
         state: &State,
         assets: &Assets,
     ) {
-        self.render_visual(
-            gl,
-            camera,
-            state,
-            assets,
-            TexUnit::new(gl, TextureUnit::Reflection.texture_unit() as u32),
-            140,
-            140,
-        );
+        self.render_visual(gl, camera, state, assets, TexUnit::new(gl, 5), 140, 140);
     }
 
     pub fn prepare_for_render(

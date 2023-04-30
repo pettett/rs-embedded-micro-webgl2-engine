@@ -35,6 +35,9 @@ impl TexUnit {
     pub fn unit(&self) -> u32 {
         self.unit
     }
+    pub fn uniti(&self) -> i32 {
+        self.unit as i32
+    }
 }
 
 #[derive(Clone, Copy)]

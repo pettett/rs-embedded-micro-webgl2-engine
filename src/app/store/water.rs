@@ -1,13 +1,12 @@
 use crate::app::render::{
     material::{MatWater, Material},
-    mesh::cube::Cube,
     render_trait::Render,
     rgl::shader::ShaderKind,
     CameraData, RenderStage,
 };
 
 use super::entity::Entity;
-use nalgebra::{Point4, Vector3};
+use nalgebra::Point4;
 use web_sys::WebGl2RenderingContext as GL;
 #[derive(Debug, Clone)]
 pub struct Water {
@@ -78,6 +77,7 @@ impl Entity for Water {
                 state.display.width as i32,
                 state.display.height as i32,
             );
+
             gl.bind_framebuffer(GL::FRAMEBUFFER, None);
         }
 

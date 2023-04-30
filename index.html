@@ -134,12 +134,18 @@ return data;
 		wave_speed: 0.06,
 		use_reflection: true,
 		use_refraction: true,
-	},
+	},	
+	#{
+		type : "mat",  
+		name : "stone",
+		meshTexture : tex("assets/textures/stone-texture.png"), 
+		meshNormal : tex("assets/textures/normalmap.png"), 
+	}, 
 	#{
 		type : "mesh",
 		position : [0,0,0],
 		mesh : "assets/models/drill.glb",
-		texture : "assets/textures/stone-texture.png",
+		mat : "stone",
 		update : |ent|{
 			ent.rotation[1] += 0.01;
 		}

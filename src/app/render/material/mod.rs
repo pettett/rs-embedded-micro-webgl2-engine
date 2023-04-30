@@ -1,7 +1,10 @@
+pub mod mat;
 pub mod mat_albedo;
 pub mod mat_textured_quad;
 pub mod mat_water;
 
+pub use mat::Mat;
+pub use mat::Uniform;
 pub use mat_albedo::MatAlbedo;
 pub use mat_water::MatWater;
 
