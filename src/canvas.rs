@@ -77,8 +77,8 @@ fn init_canvas(app: Rc<App>) -> Result<HtmlCanvasElement, JsValue> {
 pub fn update_display(canvas: &HtmlCanvasElement, state: &mut State) {
     let window = window().unwrap();
     let dpr: f64 = window.device_pixel_ratio();
-    let display_width = (canvas.client_width() as f64 * dpr).round() as u32;
-    let display_height = (canvas.client_height() as f64 * dpr).round() as u32;
+    let display_width = std::cmp::min(1920, (canvas.client_width() as f64 * dpr).round() as u32);
+    let display_height = std::cmp::min(1080, (canvas.client_height() as f64 * dpr).round() as u32);
 
     if display_width != state.display.width || display_height != state.display.height {
         canvas.set_width(display_width);

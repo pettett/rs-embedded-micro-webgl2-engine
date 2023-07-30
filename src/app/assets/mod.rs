@@ -113,21 +113,21 @@ impl Assets {
         let l = assets.borrow_mut().gltf.consume_loading();
 
         for gltf in l {
-            let data = fetch::fetch(&gltf).await.unwrap();
+            if let Ok(data) = fetch::fetch(&gltf).await {
+                let doc = gltf::Gltf::from_slice(&data[..]).unwrap();
+                //TODO: Allow paths dependant on where to model is located
+                let buffers = Self::import_buffer_data("/assets/models", &doc.document, doc.blob)
+                    .await
+                    .unwrap();
 
-            let doc = gltf::Gltf::from_slice(&data[..]).unwrap();
-            //TODO: Allow paths dependant on where to model is located
-            let buffers = Self::import_buffer_data("assets/models", &doc.document, doc.blob)
-                .await
-                .unwrap();
-
-            assets.borrow_mut().load_gltf(
-                &gltf,
-                GltfMesh {
-                    doc: doc.document,
-                    buffers,
-                },
-            );
+                assets.borrow_mut().load_gltf(
+                    &gltf,
+                    GltfMesh {
+                        doc: doc.document,
+                        buffers,
+                    },
+                );
+            }
         }
 
         let l = assets.borrow_mut().textures.consume_loading();
@@ -222,7 +222,7 @@ impl Assets {
         let mut uris = Vec::<(usize, (String, String))>::new();
 
         for (path, gltf_name) in &self.gltf.asset_indexes {
-            let path_head = "assets/textures/".to_owned();
+            let path_head = "/assets/textures/".to_owned();
             //TODO: This is a bad way of loading materials
 
             if let Some(m) = self.get_gltf(*gltf_name) {

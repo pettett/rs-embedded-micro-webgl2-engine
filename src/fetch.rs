@@ -31,6 +31,10 @@ pub async fn fetch(uri: &str) -> Result<Vec<u8>, JsValue> {
     let resp: Response = resp_value.dyn_into().unwrap();
     log::info!("Unpacking response from {}...", uri);
 
+    if resp.status() != 200 {
+        return Err(resp.dyn_into().unwrap());
+    }
+
     // Convert this other `Promise` into a rust `Future`.
 
     let array = Uint8Array::new(&JsFuture::from(resp.array_buffer().unwrap()).await?);

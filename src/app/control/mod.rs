@@ -183,11 +183,11 @@ impl Control {
                 "water" => {
                     let d = assets
                         .borrow_mut()
-                        .require_texture("assets/textures/dudvmap.png".to_owned());
+                        .require_texture("/assets/textures/dudvmap.png".to_owned());
 
                     let n = assets
                         .borrow_mut()
-                        .require_texture("assets/textures/normalmap.png".to_owned());
+                        .require_texture("/assets/textures/normalmap.png".to_owned());
 
                     let e: Rc<RefCell<dyn Entity>> =
                         Rc::new(RefCell::new(crate::app::store::water::Water {

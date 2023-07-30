@@ -51,21 +51,6 @@ impl Camera {
         self.projection = Perspective3::new(aspect, 1.0, 0.1, 400.0);
     }
 
-    pub fn view(&self) -> [f32; 16] {
-        let eye = self.get_eye_pos();
-
-        let target = Point3::new(self.pos_x, 0.0, self.pos_z);
-
-        let view = Isometry3::look_at_rh(&eye, &target, &Vector3::y());
-
-        let view = view.to_homogeneous();
-
-        let mut view_array = [0.; 16];
-        view_array.copy_from_slice(view.as_slice());
-
-        view_array
-    }
-
     pub fn view_mat(&self) -> Matrix4<f32> {
         let eye = self.get_eye_pos();
 
@@ -89,21 +74,6 @@ impl Camera {
 
         view.to_homogeneous()
     }
-    pub fn view_flipped_y(&self) -> [f32; 16] {
-        let mut eye = self.get_eye_pos();
-        eye.y = -1.0 * eye.y;
-
-        let target = Point3::new(self.pos_x, 0.0, self.pos_z);
-
-        let view = Isometry3::look_at_rh(&eye, &target, &Vector3::y());
-
-        let view = view.to_homogeneous();
-
-        let mut view_array = [0.; 16];
-        view_array.copy_from_slice(view.as_slice());
-
-        view_array
-    }
 
     pub fn get_eye_pos(&self) -> Point3<f32> {
         let yaw = self.left_right_radians;
@@ -118,13 +88,6 @@ impl Camera {
 
     pub fn get_mouse_ray(&self, mouse: &Mouse) -> Ray {
         Ray::forward().transform(&self.view_mat())
-    }
-
-    pub fn projection(&self) -> [f32; 16] {
-        let mut perspective_array = [0.; 16];
-        perspective_array.copy_from_slice(self.projection.as_matrix().as_slice());
-
-        perspective_array
     }
 
     pub fn orbit_left_right(&mut self, delta: f32) {
